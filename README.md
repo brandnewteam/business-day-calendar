@@ -9,7 +9,7 @@ Business Calendar is a JavaScript library that provides functionality for handli
 To install the package, use npm:
 
 ```
-npm install business-calendar
+npm install business-day-calendar
 ```
 
 ## Usage
@@ -19,13 +19,13 @@ To use the Business Calendar library, import it in your JavaScript code:
 ESM:
 
 ```javascript
-import createBusinessCalendar, { BusinessCalendar } from "business-calendar";
+import createBusinessCalendar from "business-day-calendar";
 ```
 
 CommonJS:
 
 ```javascript
-const createBusinessCalendar = require("business-calendar");
+const createBusinessCalendar = require("business-day-calendar");
 ```
 
 You can then create an instance of the `BusinessCalendar` and use its methods to perform operations related to business days.
@@ -36,7 +36,7 @@ TypeScript declarations are bundled and published at `dist/index.d.ts` and are r
 
 ## Contributing
 
-Contributions are welcome! Please open an issue or submit a pull request on the [GitHub repository](https://github.com/brandnewteam/business-calendar).
+Contributions are welcome! Please open an issue or submit a pull request on the [GitHub repository](https://github.com/brandnewteam/business-day-calendar).
 
 ## License
 
