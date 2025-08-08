@@ -1,5 +1,5 @@
 {
-  "name": "business-calendar",
+  "name": "business-day-calendar",
   "version": "0.0.1",
   "description": "luxon wrapper for business days functionality",
   "type": "module",
