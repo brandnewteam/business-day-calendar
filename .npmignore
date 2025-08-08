@@ -1,0 +1,9 @@
+# Keep dist and docs; exclude local artifacts
+*.log
+*.map
+*.local
+*.env*
+node_modules
+coverage
+.vscode
+.DS_Store

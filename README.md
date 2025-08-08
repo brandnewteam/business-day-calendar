@@ -16,15 +16,23 @@ npm install business-calendar
 
 To use the Business Calendar library, import it in your JavaScript code:
 
+ESM:
+
 ```javascript
-import { BusinessCalendar } from "business-calendar";
+import createBusinessCalendar, { BusinessCalendar } from "business-calendar";
+```
+
+CommonJS:
+
+```javascript
+const createBusinessCalendar = require("business-calendar");
 ```
 
 You can then create an instance of the `BusinessCalendar` and use its methods to perform operations related to business days.
 
 ## Type Declarations
 
-This project includes TypeScript type declarations to provide type safety and IntelliSense support. The type definitions can be found in the `src/types/index.d.ts` file.
+TypeScript declarations are bundled and published at `dist/index.d.ts` and are referenced via the package `exports` and `types` fields, so editors and TS will pick them up automatically.
 
 ## Contributing
 
