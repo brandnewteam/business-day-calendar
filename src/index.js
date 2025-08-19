@@ -1,4 +1,4 @@
-import { DateTime } from "luxon";
+import { DateTime, Duration } from "luxon";
 
 /**
  * A predicate that returns true when the given date is a holiday.
@@ -13,6 +13,16 @@ import { DateTime } from "luxon";
  * @property {HolidayMatcher[]} [holidayMatchers] - A list of functions that mark a date as a holiday.
  */
 
+/**
+ *
+ * @param {DateTime} date
+ * @param {CreateOptions} options
+ * @returns {BusinessCalendar}
+ */
+const createBusinessCalendar = (date, options) => {
+  return new BusinessCalendar(date, options);
+};
+
 export class BusinessCalendar {
   _bcDate;
 
@@ -26,7 +36,6 @@ export class BusinessCalendar {
    *
    * @param {DateTime} date
    * @param {CreateOptions} options
-   * @returns
    */
   constructor(date, options) {
     if (typeof date === "undefined") {
@@ -67,16 +76,88 @@ export class BusinessCalendar {
       },
     });
   }
-}
 
-/**
- *
- * @param {DateTime} date
- * @param {CreateOptions} options
- * @returns
- */
-const createBusinessCalendar = (date, options) => {
-  return new BusinessCalendar(date, options);
-};
+  isBusinessDay() {
+    const dayOfWeek = this._bcDate.weekday;
+
+    if (!this._bcBusinessDays.includes(dayOfWeek)) {
+      return false;
+    }
+
+    return !this.isHoliday();
+  }
+
+  isHoliday() {
+    return this._bcHolidayMatchers.some((matcher) => matcher(this._bcDate));
+  }
+
+  /**
+   * Counts the amount of business days between two DateTimes as a Duration.
+   * @param {DateTime} otherDateTime - the DateTime to compare this one to
+   * @param {Object} [options] - options for the comparison
+   * @param {boolean} [options.excludeStartingDay=false] - when the starting day is a business day, exclude it from the count (ie. make the range excluding)
+   * @returns {Duration} - the difference between the two DateTimes
+   */
+  diffBusinessDays(otherDateTime, options = {}) {
+    if (!this._bcDate.isValid || !otherDateTime.isValid) {
+      return Duration.invalid("created by diffing an invalid DateTime");
+    }
+
+    const opts = Object.assign(
+      {
+        excludeStartingDay: false,
+      },
+      options
+    );
+
+    const that = createBusinessCalendar(otherDateTime, {
+      businessDays: this._bcBusinessDays,
+      holidayMatchers: this._bcHolidayMatchers,
+    });
+
+    /** @type {BusinessCalendar & DateTime} */
+    // @ts-ignore
+    let start = this.startOf("day");
+
+    /** @type {BusinessCalendar & DateTime} */
+    // @ts-ignore
+    const end = that.startOf("day");
+
+    if (start.hasSame(end, "day")) {
+      return Duration.fromObject({ days: 0 });
+    }
+
+    let businessDays = 0;
+
+    // Forwards in time
+    if (this._bcDate.valueOf() < that._bcDate.valueOf()) {
+      if (start.isBusinessDay() && opts.excludeStartingDay) {
+        start = start.plus({ days: 1 });
+      }
+      do {
+        if (start.isBusinessDay()) {
+          businessDays++;
+        }
+        start = start.plus({ days: 1 });
+      } while (start._bcDate.valueOf() < end._bcDate.valueOf());
+
+      // Backwards in time
+    } else {
+      if (start.isBusinessDay() && opts.excludeStartingDay) {
+        start = start.minus({ days: 1 });
+      }
+      do {
+        if (start.isBusinessDay()) {
+          businessDays--;
+        }
+        start = start.minus({ days: 1 });
+      } while (start._bcDate.valueOf() > end._bcDate.valueOf());
+    }
+
+    return Duration.fromObject({
+      days: businessDays,
+    });
+  }
+}
 
 export default createBusinessCalendar;
