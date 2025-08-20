@@ -13,6 +13,8 @@ import { DateTime, Duration } from "luxon";
  * @property {HolidayMatcher[]} [holidayMatchers] - A list of functions that mark a date as a holiday.
  */
 
+/** @typedef {import("luxon").DurationUnit} DurationUnit */
+
 /**
  *
  * @param {DateTime} date
@@ -157,6 +159,43 @@ export class BusinessDayCalendar {
     return Duration.fromObject({
       days: businessDays,
     });
+  }
+
+  /**
+   * Add the specified amount of business time to the current DateTime. Example: adding 1 week will add 7 **working** days.
+   * @param {number} amount
+   * @param {DurationUnit} [unit='day']
+   * @returns {BusinessDayCalendar}
+   */
+  plusBusiness(amount, unit = "day") {
+    const direction = amount > 0 ? 1 : -1;
+
+    let businessDays = Math.abs(
+      Duration.fromObject({ [unit]: amount }).as("days")
+    );
+
+    /** @type {BusinessDayCalendar & DateTime} */
+    // @ts-ignore
+    let newDate = this;
+
+    while (businessDays > 0) {
+      newDate = newDate.plus({ days: direction });
+      if (newDate.isBusinessDay()) {
+        businessDays--;
+      }
+    }
+
+    return newDate;
+  }
+
+  /**
+   * Add the specified amount of business time to the current DateTime. Example: adding 1 week will add 7 **working** days.
+   * @param {number} amount
+   * @param {DurationUnit} [unit='day']
+   * @returns {BusinessDayCalendar }
+   */
+  minusBusiness(amount, unit = "day") {
+    return this.plusBusiness(-amount, unit);
   }
 }
 
