@@ -17,13 +17,13 @@ import { DateTime, Duration } from "luxon";
  *
  * @param {DateTime} date
  * @param {CreateOptions} options
- * @returns {BusinessCalendar}
+ * @returns {BusinessDayCalendar}
  */
-const createBusinessCalendar = (date, options) => {
-  return new BusinessCalendar(date, options);
+const createBusinessDayCalendar = (date, options) => {
+  return new BusinessDayCalendar(date, options);
 };
 
-export class BusinessCalendar {
+export class BusinessDayCalendar {
   _bcDate;
 
   /** @type {number[]} */
@@ -64,7 +64,7 @@ export class BusinessCalendar {
           return (...args) => {
             const result = value.apply(target._bcDate, args);
             return result instanceof DateTime
-              ? new BusinessCalendar(result, {
+              ? new BusinessDayCalendar(result, {
                   businessDays: target._bcBusinessDays,
                   holidayMatchers: target._bcHolidayMatchers,
                 })
@@ -110,16 +110,16 @@ export class BusinessCalendar {
       options
     );
 
-    const that = createBusinessCalendar(otherDateTime, {
+    const that = createBusinessDayCalendar(otherDateTime, {
       businessDays: this._bcBusinessDays,
       holidayMatchers: this._bcHolidayMatchers,
     });
 
-    /** @type {BusinessCalendar & DateTime} */
+    /** @type {BusinessDayCalendar & DateTime} */
     // @ts-ignore
     let start = this.startOf("day");
 
-    /** @type {BusinessCalendar & DateTime} */
+    /** @type {BusinessDayCalendar & DateTime} */
     // @ts-ignore
     const end = that.startOf("day");
 
@@ -160,4 +160,4 @@ export class BusinessCalendar {
   }
 }
 
-export default createBusinessCalendar;
+export default createBusinessDayCalendar;
