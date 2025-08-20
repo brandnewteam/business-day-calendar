@@ -36,8 +36,8 @@ export class BusinessDayCalendar {
 
   /**
    *
-   * @param {DateTime} date
-   * @param {CreateOptions} options
+   * @param {DateTime} [date] Defaults to DateTime.now()
+   * @param {CreateOptions} [options]
    */
   constructor(date, options) {
     if (typeof date === "undefined") {
@@ -99,6 +99,9 @@ export class BusinessDayCalendar {
 
   /**
    * Counts the amount of business days between two DateTimes as a Duration.
+   * The starting day is included, unless the option to exclude it is set.
+   * The end day is **not** included in the count.
+   *
    * @param {DateTime} otherDateTime - the DateTime to compare this one to
    * @param {Object} [options] - options for the comparison
    * @param {boolean} [options.excludeStartingDay=false] - when the starting day is a business day, exclude it from the count (ie. make the range excluding)
