@@ -79,6 +79,10 @@ export class BusinessDayCalendar {
     });
   }
 
+  valueOf() {
+    return this._bcDate.valueOf();
+  }
+
   isBusinessDay() {
     const dayOfWeek = this._bcDate.weekday;
 
