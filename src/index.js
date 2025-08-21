@@ -26,7 +26,7 @@ const createBusinessDayCalendar = (date, options) => {
 };
 
 export class BusinessDayCalendar {
-  _bcDate;
+  _DT;
 
   /** @type {number[]} */
   _bcWeekendDays;
@@ -41,9 +41,14 @@ export class BusinessDayCalendar {
    */
   constructor(date, options) {
     if (typeof date === "undefined") {
-      this._bcDate = DateTime.now();
+      this._DT = DateTime.now();
     } else {
-      this._bcDate = DateTime.fromJSDate(date.toJSDate());
+      this._DT = DateTime.fromMillis(date.toMillis(), {
+        zone: date.zone,
+        locale: date.locale || undefined,
+        outputCalendar: date.outputCalendar || undefined,
+        numberingSystem: date.numberingSystem || undefined,
+      });
     }
 
     const opts = options || {};
@@ -59,12 +64,12 @@ export class BusinessDayCalendar {
         }
 
         // @ts-ignore
-        const value = target._bcDate[prop];
+        const value = target._DT[prop];
 
         if (typeof value === "function") {
           // @ts-ignore
           return (...args) => {
-            const result = value.apply(target._bcDate, args);
+            const result = value.apply(target._DT, args);
             return result instanceof DateTime
               ? new BusinessDayCalendar(result, {
                 weekendDays: target._bcWeekendDays,
@@ -84,7 +89,7 @@ export class BusinessDayCalendar {
   }
 
   isBusinessDay() {
-    const dayOfWeek = this._bcDate.weekday;
+    const dayOfWeek = this._DT.weekday;
 
     if (this._bcWeekendDays.includes(dayOfWeek)) {
       return false;
@@ -94,7 +99,7 @@ export class BusinessDayCalendar {
   }
 
   isHoliday() {
-    return this._bcHolidayMatchers.some((matcher) => matcher(this._bcDate));
+    return this._bcHolidayMatchers.some((matcher) => matcher(this._DT));
   }
 
   /**
@@ -108,7 +113,7 @@ export class BusinessDayCalendar {
    * @returns {Duration} - the difference between the two DateTimes
    */
   diffBusinessDays(otherDateTime, options = {}) {
-    if (!this._bcDate.isValid || !otherDateTime.isValid) {
+    if (!this._DT.isValid || !otherDateTime.isValid) {
       return Duration.invalid("created by diffing an invalid DateTime");
     }
 
@@ -139,7 +144,7 @@ export class BusinessDayCalendar {
     let businessDays = 0;
 
     // Forwards in time
-    if (this._bcDate.valueOf() < that._bcDate.valueOf()) {
+    if (this._DT.valueOf() < that._DT.valueOf()) {
       if (start.isBusinessDay() && opts.excludeStartingDay) {
         start = start.plus({ days: 1 });
       }
@@ -148,7 +153,7 @@ export class BusinessDayCalendar {
           businessDays++;
         }
         start = start.plus({ days: 1 });
-      } while (start._bcDate.valueOf() < end._bcDate.valueOf());
+      } while (start._DT.valueOf() < end._DT.valueOf());
 
       // Backwards in time
     } else {
@@ -160,7 +165,7 @@ export class BusinessDayCalendar {
           businessDays--;
         }
         start = start.minus({ days: 1 });
-      } while (start._bcDate.valueOf() > end._bcDate.valueOf());
+      } while (start._DT.valueOf() > end._DT.valueOf());
     }
 
     return Duration.fromObject({
