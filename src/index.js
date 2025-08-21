@@ -1,5 +1,8 @@
 import { DateTime, Duration } from "luxon";
 
+// Export holiday matchers
+export * from "./holidays/index.js";
+
 /**
  * A predicate that returns true when the given date is a holiday.
  * @callback HolidayMatcher
