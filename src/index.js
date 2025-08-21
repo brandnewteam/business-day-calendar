@@ -170,6 +170,8 @@ export class BusinessDayCalendar {
 
   /**
    * Add the specified amount of business time to the current DateTime. Example: adding 1 week will add 7 **working** days.
+   * Fractional values are rounded up to the next integer.
+   *
    * @param {number} amount
    * @param {DurationUnit} [unit='day']
    * @returns {BusinessDayCalendar}
@@ -178,7 +180,7 @@ export class BusinessDayCalendar {
     const direction = amount > 0 ? 1 : -1;
 
     let businessDays = Math.abs(
-      Duration.fromObject({ [unit]: amount }).as("days")
+      Math.ceil(Duration.fromObject({ [unit]: amount }).as("days"))
     );
 
     /** @type {BusinessDayCalendar & DateTime} */
