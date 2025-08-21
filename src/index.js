@@ -56,8 +56,19 @@ export class BusinessDateTime {
 
     const opts = options || {};
 
-    this._bcWeekendDays = opts.weekendDays || [6, 7];
+    this._bcWeekendDays = Array.from(new Set(opts.weekendDays || [6, 7]));
     this._bcHolidayMatchers = opts.holidayMatchers || [];
+
+    if (
+      Math.max(...this._bcWeekendDays) > 7 ||
+      Math.min(...this._bcWeekendDays) < 0
+    ) {
+      throw new Error("Invalid weekendDays option");
+    }
+
+    if (this._bcWeekendDays.length > 6) {
+      throw new Error("Invalid weekendDays option");
+    }
 
     return new Proxy(this, {
       get(target, prop) {
