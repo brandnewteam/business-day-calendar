@@ -58,6 +58,23 @@ export class BusinessDayCalendar {
 
     return new Proxy(this, {
       get(target, prop) {
+        // If the property exists on the target (not inherited), return it directly
+        if (Object.prototype.hasOwnProperty.call(target, prop)) {
+          // @ts-ignore
+          return target[prop];
+        }
+
+        // If property is a method on Object.prototype that we want to override
+        // @ts-ignore
+        if (["toString", "toLocaleString", "valueOf"].includes(prop)) {
+          // @ts-ignore
+          const dateMethod = target._DT[prop];
+          if (typeof dateMethod === "function") {
+            // @ts-ignore
+            return (...args) => dateMethod.apply(target._DT, args);
+          }
+        }
+
         if (prop in target) {
           // @ts-ignore
           return target[prop];
@@ -70,22 +87,19 @@ export class BusinessDayCalendar {
           // @ts-ignore
           return (...args) => {
             const result = value.apply(target._DT, args);
-            return result instanceof DateTime
-              ? new BusinessDayCalendar(result, {
+            if (result instanceof DateTime) {
+              return new BusinessDayCalendar(result, {
                 weekendDays: target._bcWeekendDays,
                   holidayMatchers: target._bcHolidayMatchers,
-                })
-              : result;
+              });
+            }
+            return result;
           };
         }
 
         return value;
       },
     });
-  }
-
-  valueOf() {
-    return this._bcDate.valueOf();
   }
 
   isBusinessDay() {
