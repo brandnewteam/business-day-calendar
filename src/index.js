@@ -152,18 +152,13 @@ export class BusinessDateTime {
       options
     );
 
-    const that = new BusinessDateTime(otherDateTime, {
-      weekendDays: this._bcWeekendDays,
-      holidayMatchers: this._bcHolidayMatchers,
-    });
-
     /** @type {BusinessDateTime & DateTime} */
     // @ts-ignore
     let start = this.startOf("day");
 
     /** @type {BusinessDateTime & DateTime} */
     // @ts-ignore
-    const end = that.startOf("day");
+    const end = otherDateTime.startOf("day");
 
     if (start.hasSame(end, "day")) {
       return Duration.fromObject({ days: 0 });
@@ -172,7 +167,7 @@ export class BusinessDateTime {
     let businessDays = 0;
 
     // Forwards in time
-    if (this._DT.valueOf() < that._DT.valueOf()) {
+    if (this._DT.valueOf() < otherDateTime.valueOf()) {
       if (start.isBusinessDay() && opts.excludeStartingDay) {
         start = start.plus({ days: 1 });
       }
@@ -181,7 +176,7 @@ export class BusinessDateTime {
           businessDays++;
         }
         start = start.plus({ days: 1 });
-      } while (start._DT.valueOf() < end._DT.valueOf());
+      } while (start._DT.valueOf() < end.valueOf());
 
       // Backwards in time
     } else {
@@ -193,7 +188,7 @@ export class BusinessDateTime {
           businessDays--;
         }
         start = start.minus({ days: 1 });
-      } while (start._DT.valueOf() > end._DT.valueOf());
+      } while (start._DT.valueOf() > end.valueOf());
     }
 
     return Duration.fromObject({
