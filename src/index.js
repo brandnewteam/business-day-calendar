@@ -9,7 +9,7 @@ import { DateTime, Duration } from "luxon";
 
 /**
  * @typedef {Object} CreateOptions
- * @property {number[]} [businessDays] - ISO weekday numbers 1-7 (Mon=1 .. Sun=7). Defaults to [1,2,3,4,5].
+ * @property {number[]} [weekendDays] - ISO weekday numbers 1-7 (Mon=1 .. Sun=7). Defaults to [6,7].
  * @property {HolidayMatcher[]} [holidayMatchers] - A list of functions that mark a date as a holiday.
  */
 
@@ -29,7 +29,7 @@ export class BusinessDayCalendar {
   _bcDate;
 
   /** @type {number[]} */
-  _bcBusinessDays;
+  _bcWeekendDays;
 
   /** @type {HolidayMatcher[]} */
   _bcHolidayMatchers = [];
@@ -48,7 +48,7 @@ export class BusinessDayCalendar {
 
     const opts = options || {};
 
-    this._bcBusinessDays = opts.businessDays || [1, 2, 3, 4, 5];
+    this._bcWeekendDays = opts.weekendDays || [6, 7];
     this._bcHolidayMatchers = opts.holidayMatchers || [];
 
     return new Proxy(this, {
@@ -67,7 +67,7 @@ export class BusinessDayCalendar {
             const result = value.apply(target._bcDate, args);
             return result instanceof DateTime
               ? new BusinessDayCalendar(result, {
-                  businessDays: target._bcBusinessDays,
+                weekendDays: target._bcWeekendDays,
                   holidayMatchers: target._bcHolidayMatchers,
                 })
               : result;
@@ -86,7 +86,7 @@ export class BusinessDayCalendar {
   isBusinessDay() {
     const dayOfWeek = this._bcDate.weekday;
 
-    if (!this._bcBusinessDays.includes(dayOfWeek)) {
+    if (this._bcWeekendDays.includes(dayOfWeek)) {
       return false;
     }
 
@@ -120,7 +120,7 @@ export class BusinessDayCalendar {
     );
 
     const that = createBusinessDayCalendar(otherDateTime, {
-      businessDays: this._bcBusinessDays,
+      weekendDays: this._bcWeekendDays,
       holidayMatchers: this._bcHolidayMatchers,
     });
 
