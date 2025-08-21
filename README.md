@@ -9,8 +9,10 @@ Business Calendar is a JavaScript library that provides functionality for handli
 To install the package, use npm:
 
 ```
-npm install business-day-calendar
+npm install business-day-calendar luxon
 ```
+
+**NB:** Luxon is a peer dependency, so you need to have it as well.
 
 ## Usage
 
