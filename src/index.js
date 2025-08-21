@@ -21,7 +21,7 @@ import { DateTime, Duration } from "luxon";
  * @param {CreateOptions} options
  * @returns {BusinessDayCalendar}
  */
-const createBusinessDayCalendar = (date, options) => {
+export const create = (date, options) => {
   return new BusinessDayCalendar(date, options);
 };
 
@@ -90,7 +90,7 @@ export class BusinessDayCalendar {
             if (result instanceof DateTime) {
               return new BusinessDayCalendar(result, {
                 weekendDays: target._bcWeekendDays,
-                  holidayMatchers: target._bcHolidayMatchers,
+                holidayMatchers: target._bcHolidayMatchers,
               });
             }
             return result;
@@ -138,7 +138,7 @@ export class BusinessDayCalendar {
       options
     );
 
-    const that = createBusinessDayCalendar(otherDateTime, {
+    const that = create(otherDateTime, {
       weekendDays: this._bcWeekendDays,
       holidayMatchers: this._bcHolidayMatchers,
     });
@@ -226,5 +226,3 @@ export class BusinessDayCalendar {
     return this.plusBusiness(-amount, unit);
   }
 }
-
-export default createBusinessDayCalendar;
