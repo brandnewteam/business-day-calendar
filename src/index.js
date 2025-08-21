@@ -8,24 +8,27 @@ import { DateTime, Duration } from "luxon";
  */
 
 /**
- * @typedef {Object} CreateOptions
+ * @typedef {Object} CreationOptions
  * @property {number[]} [weekendDays] - ISO weekday numbers 1-7 (Mon=1 .. Sun=7). Defaults to [6,7].
  * @property {HolidayMatcher[]} [holidayMatchers] - A list of functions that mark a date as a holiday.
  */
 
-/** @typedef {import("luxon").DurationUnit} DurationUnit */
+/** @typedef {import("luxon").DurationLikeObject} DurationLikeObject */
 
 /**
+ * Create a Business Calendar function (a BusinessDateTime factory) with a defined set of business days and holidays.
+ * These options are defined at the creation of this calendar object, and passed on when BusinessDateTime methods return new instances.
  *
- * @param {DateTime} date
- * @param {CreateOptions} options
- * @returns {BusinessDayCalendar}
+ * @param {CreationOptions} options
+ * @returns {(date: DateTime) => BusinessDateTime}
  */
-export const create = (date, options) => {
-  return new BusinessDayCalendar(date, options);
+export const createBusinessCalendar = (options) => {
+  return (date) => {
+    return new BusinessDateTime(date, options);
+  };
 };
 
-export class BusinessDayCalendar {
+export class BusinessDateTime {
   _DT;
 
   /** @type {number[]} */
@@ -37,7 +40,7 @@ export class BusinessDayCalendar {
   /**
    *
    * @param {DateTime} [date] Defaults to DateTime.now()
-   * @param {CreateOptions} [options]
+   * @param {CreationOptions} [options]
    */
   constructor(date, options) {
     if (typeof date === "undefined") {
@@ -88,7 +91,7 @@ export class BusinessDayCalendar {
           return (...args) => {
             const result = value.apply(target._DT, args);
             if (result instanceof DateTime) {
-              return new BusinessDayCalendar(result, {
+              return new BusinessDateTime(result, {
                 weekendDays: target._bcWeekendDays,
                 holidayMatchers: target._bcHolidayMatchers,
               });
@@ -138,16 +141,16 @@ export class BusinessDayCalendar {
       options
     );
 
-    const that = create(otherDateTime, {
+    const that = new BusinessDateTime(otherDateTime, {
       weekendDays: this._bcWeekendDays,
       holidayMatchers: this._bcHolidayMatchers,
     });
 
-    /** @type {BusinessDayCalendar & DateTime} */
+    /** @type {BusinessDateTime & DateTime} */
     // @ts-ignore
     let start = this.startOf("day");
 
-    /** @type {BusinessDayCalendar & DateTime} */
+    /** @type {BusinessDateTime & DateTime} */
     // @ts-ignore
     const end = that.startOf("day");
 
@@ -191,18 +194,18 @@ export class BusinessDayCalendar {
    * Add the specified amount of business time to the current DateTime. Example: adding 1 week will add 7 **working** days.
    * Fractional values are rounded up to the next integer.
    *
-   * @param {number} amount
-   * @param {DurationUnit} [unit='day']
-   * @returns {BusinessDayCalendar}
+   * @param {Duration | DurationLikeObject} duration
+   * @returns {BusinessDateTime}
    */
-  plusBusiness(amount, unit = "day") {
+  plusBusiness(duration) {
+    const dur = Duration.fromDurationLike(duration || {});
+
+    const amount = dur.as("days") || 0;
     const direction = amount > 0 ? 1 : -1;
 
-    let businessDays = Math.abs(
-      Math.ceil(Duration.fromObject({ [unit]: amount }).as("days"))
-    );
+    let businessDays = Math.abs(Math.ceil(amount));
 
-    /** @type {BusinessDayCalendar & DateTime} */
+    /** @type {BusinessDateTime & DateTime} */
     // @ts-ignore
     let newDate = this;
 
@@ -217,12 +220,15 @@ export class BusinessDayCalendar {
   }
 
   /**
-   * Add the specified amount of business time to the current DateTime. Example: adding 1 week will add 7 **working** days.
-   * @param {number} amount
-   * @param {DurationUnit} [unit='day']
-   * @returns {BusinessDayCalendar }
+   * Subtract the specified amount of business time to the current DateTime. Use positive amounts in the Duration.
+   * See {@link BusinessDateTime.plusBusiness} for more information.
+   *
+   * @param {Duration | DurationLikeObject} duration
+   * @returns {BusinessDateTime }
    */
-  minusBusiness(amount, unit = "day") {
-    return this.plusBusiness(-amount, unit);
+  minusBusiness(duration) {
+    const dur = Duration.fromDurationLike(duration).negate();
+
+    return this.plusBusiness(dur);
   }
 }
