@@ -1,15 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { DateTime } from "luxon";
-import createBusinessDayCalendar, {
-  BusinessDayCalendar,
-} from "../src/index.js";
+import { create, BusinessDayCalendar } from "../src/index.js";
 
 describe("BusinessDayCalendar", () => {
   // Test creation of calendar
   describe("creation", () => {
     it("should create a calendar with default options", () => {
       const now = DateTime.now();
-      const calendar1 = createBusinessDayCalendar();
+      const calendar1 = create();
 
       expect(calendar1).toBeInstanceOf(BusinessDayCalendar);
       expect(calendar1.isValid).toBe(true);
@@ -18,31 +16,39 @@ describe("BusinessDayCalendar", () => {
 
     it("should create a calendar by passing a DateTime", () => {
       const monday = DateTime.fromISO("2024-01-01");
-      const calendar1 = createBusinessDayCalendar(monday);
+      const calendar1 = create(monday);
 
       expect(calendar1).toBeInstanceOf(BusinessDayCalendar);
       expect(calendar1.isValid).toBe(true);
       expect(calendar1.toISO()).toBe(monday.toISO());
     });
 
-    it("should create a calendar with custom business days", () => {
-      const tuesday = DateTime.fromISO("2024-01-02");
-      const wednesday = DateTime.fromISO("2024-01-03");
-      const calendar2 = createBusinessDayCalendar(tuesday, {
-        businessDays: [2], // Only Tuesday is a business day
-      });
-      const calendar3 = createBusinessDayCalendar(wednesday, {
-        businessDays: [2], // Only Tuesday is a business day
-      });
+    it("should create a calendar with custom weekends day", () => {
+      const options = {
+        weekendDays: [5, 6], // Only Friday and Saturday are weekend days
+      };
 
-      expect(calendar2.isBusinessDay()).toBe(true);
-      expect(calendar3.isBusinessDay()).toBe(false);
+      const monday = create(DateTime.fromISO("2024-01-01"), options);
+      const tuesday = create(DateTime.fromISO("2024-01-02"), options);
+      const wednesday = create(DateTime.fromISO("2024-01-03"), options);
+      const thursday = create(DateTime.fromISO("2024-01-04"), options);
+      const friday = create(DateTime.fromISO("2024-01-05"), options);
+      const saturday = create(DateTime.fromISO("2024-01-06"), options);
+      const sunday = create(DateTime.fromISO("2024-01-07"), options);
+
+      expect(monday.isBusinessDay()).toBe(true);
+      expect(tuesday.isBusinessDay()).toBe(true);
+      expect(wednesday.isBusinessDay()).toBe(true);
+      expect(thursday.isBusinessDay()).toBe(true);
+      expect(friday.isBusinessDay()).toBe(false);
+      expect(saturday.isBusinessDay()).toBe(false);
+      expect(sunday.isBusinessDay()).toBe(true);
     });
 
     it("should create a calendar with holiday matchers", () => {
       const isNewYearsDay = (date) => date.month === 1 && date.day === 1;
 
-      const calendar = createBusinessDayCalendar(
+      const calendar = create(
         DateTime.fromISO("2024-01-01"), // A holiday on Monday
         {
           holidayMatchers: [isNewYearsDay],
@@ -52,16 +58,78 @@ describe("BusinessDayCalendar", () => {
       expect(calendar.isHoliday()).toBe(true);
       expect(calendar.isBusinessDay()).toBe(false);
     });
+
+    // Test common object methods
+    it("should implement valueOf correctly", () => {
+      const monday = DateTime.fromISO("2024-01-01");
+      const businessMonday = create(monday);
+      expect(businessMonday.valueOf()).toBe(monday.valueOf());
+
+      // Test comparison works
+      const tuesday = DateTime.fromISO("2024-01-02");
+      const businessTuesday = create(tuesday);
+      expect(businessTuesday > businessMonday).toBe(true);
+    });
+
+    it("should implement toString correctly", () => {
+      const monday = DateTime.fromISO("2024-01-01", { zone: "utc" });
+      const businessMonday = create(monday);
+      expect(businessMonday.toString()).toBe(monday.toString());
+      expect(businessMonday.toString()).toBe("2024-01-01T00:00:00.000Z");
+    });
+
+    it("should implement toLocaleString correctly", () => {
+      const monday = DateTime.fromISO("2024-01-01", { zone: "utc" });
+      const businessMonday = create(monday);
+      expect(businessMonday.toLocaleString()).toBe(monday.toLocaleString());
+    });
+
+    it("should handle empty weekendDays array", () => {
+      const calendar = create(DateTime.fromISO("2024-01-01"), {
+        weekendDays: [],
+      });
+
+      expect(calendar.isBusinessDay()).toBe(true);
+
+      // Test adding business days with no weekend days
+      expect(calendar.plusBusiness(5).toISODate()).toBe("2024-01-06");
+      expect(calendar.plusBusiness(14).toISODate()).toBe("2024-01-15");
+    });
+
+    // Test large number of business days
+    it("should handle adding a large number of business days", () => {
+      const isChristmas = (date) => date.month === 12 && date.day === 25;
+      const isBoxingDay = (date) => date.month === 12 && date.day === 26;
+      const isNewYears = (date) => date.month === 1 && date.day === 1;
+
+      const start = create(DateTime.fromISO("2024-01-01"), {
+        holidayMatchers: [isChristmas, isBoxingDay, isNewYears],
+      });
+      const result = start.plusBusiness(10_000);
+
+      // Calculate the expected date (this would be ~14.000+ calendar days ahead)
+      expect(result.isBusinessDay()).toBe(true);
+    });
+
+    // Test handling of fractional business days
+    it("should ceil fractional business day values", () => {
+      const start = create(DateTime.fromISO("2024-01-01")); // Monday
+      const result1 = start.plusBusiness(1.7);
+      const result2 = start.plusBusiness(1.2);
+
+      expect(result1.toISODate()).toBe("2024-01-03"); // Should be same as adding 1
+      expect(result2.toISODate()).toBe("2024-01-03"); // Should be same as adding 1
+    });
   });
 
   // Test isBusinessDay method
   describe("isBusinessDay", () => {
     it("should return true for business days", () => {
-      const mon = createBusinessDayCalendar(DateTime.fromISO("2024-01-01"));
-      const tue = createBusinessDayCalendar(DateTime.fromISO("2024-01-02"));
-      const wed = createBusinessDayCalendar(DateTime.fromISO("2024-01-03"));
-      const thu = createBusinessDayCalendar(DateTime.fromISO("2024-01-04"));
-      const fri = createBusinessDayCalendar(DateTime.fromISO("2024-01-05"));
+      const mon = create(DateTime.fromISO("2024-01-01"));
+      const tue = create(DateTime.fromISO("2024-01-02"));
+      const wed = create(DateTime.fromISO("2024-01-03"));
+      const thu = create(DateTime.fromISO("2024-01-04"));
+      const fri = create(DateTime.fromISO("2024-01-05"));
 
       expect(mon.isBusinessDay()).toBe(true);
       expect(tue.isBusinessDay()).toBe(true);
@@ -71,8 +139,8 @@ describe("BusinessDayCalendar", () => {
     });
 
     it("should return false for weekends", () => {
-      const sat = createBusinessDayCalendar(DateTime.fromISO("2024-01-27"));
-      const sun = createBusinessDayCalendar(DateTime.fromISO("2024-01-28"));
+      const sat = create(DateTime.fromISO("2024-01-27"));
+      const sun = create(DateTime.fromISO("2024-01-28"));
 
       expect(sat.isBusinessDay()).toBe(false);
       expect(sun.isBusinessDay()).toBe(false);
@@ -81,7 +149,7 @@ describe("BusinessDayCalendar", () => {
     it("should return false for holidays on weekdays", () => {
       const isWorkersDay = (date) => date.month === 5 && date.day === 1;
 
-      const wed = createBusinessDayCalendar(DateTime.fromISO("2024-05-01"), {
+      const wed = create(DateTime.fromISO("2024-05-01"), {
         holidayMatchers: [isWorkersDay],
       });
 
@@ -94,7 +162,7 @@ describe("BusinessDayCalendar", () => {
     it("should return true for dates matching holiday matchers", () => {
       const isChristmas = (date) => date.month === 12 && date.day === 25;
 
-      const wed = createBusinessDayCalendar(
+      const wed = create(
         DateTime.fromISO("2024-12-25"), // Christmas on a Wednesday
         {
           holidayMatchers: [isChristmas],
@@ -106,7 +174,7 @@ describe("BusinessDayCalendar", () => {
 
     it("should return false for dates not matching holiday matchers", () => {
       const isChristmas = (date) => date.month === 12 && date.day === 25;
-      const wed = createBusinessDayCalendar(
+      const wed = create(
         DateTime.fromISO("2024-12-18"), // A week before Christmas
         {
           holidayMatchers: [isChristmas],
@@ -120,21 +188,15 @@ describe("BusinessDayCalendar", () => {
       const isChristmas = (date) => date.month === 12 && date.day === 25;
       const isNewYears = (date) => date.month === 1 && date.day === 1;
 
-      const jan1 = createBusinessDayCalendar(DateTime.fromISO("2024-01-01"), {
+      const jan1 = create(DateTime.fromISO("2024-01-01"), {
         holidayMatchers: [isChristmas, isNewYears],
       });
-      const blueMonday = createBusinessDayCalendar(
-        DateTime.fromISO("2024-01-15"),
-        {
-          holidayMatchers: [isChristmas, isNewYears],
-        }
-      );
-      const christmas = createBusinessDayCalendar(
-        DateTime.fromISO("2024-12-25"),
-        {
-          holidayMatchers: [isChristmas, isNewYears],
-        }
-      );
+      const blueMonday = create(DateTime.fromISO("2024-01-15"), {
+        holidayMatchers: [isChristmas, isNewYears],
+      });
+      const christmas = create(DateTime.fromISO("2024-12-25"), {
+        holidayMatchers: [isChristmas, isNewYears],
+      });
 
       expect(jan1.isHoliday()).toBe(true);
       expect(blueMonday.isHoliday()).toBe(false);
@@ -146,14 +208,14 @@ describe("BusinessDayCalendar", () => {
   describe("diffBusinessDays", () => {
     it("should work with either another BusinessDayCalendar or a plain DateTime", () => {
       const isWorkersDay = (date) => date.month === 5 && date.day === 1;
-      const start = createBusinessDayCalendar(
+      const start = create(
         DateTime.fromISO("2024-04-30"), // Wed
         {
           holidayMatchers: [isWorkersDay],
         }
       );
 
-      const endCal = createBusinessDayCalendar(DateTime.fromISO("2024-05-05")); // Sunday
+      const endCal = create(DateTime.fromISO("2024-05-05")); // Sunday
       const endDateTime = DateTime.fromISO("2024-05-05"); // Sunday
 
       const diffCal = start.diffBusinessDays(endCal);
@@ -164,7 +226,7 @@ describe("BusinessDayCalendar", () => {
     });
 
     it("should count business days between two dates", () => {
-      const mon = createBusinessDayCalendar(DateTime.fromISO("2024-01-08")); // Monday
+      const mon = create(DateTime.fromISO("2024-01-08")); // Monday
       const nextFri = DateTime.fromISO("2024-01-12"); // Next Monday
       const nextMon = DateTime.fromISO("2024-01-15"); // Next Monday
 
@@ -176,7 +238,7 @@ describe("BusinessDayCalendar", () => {
     });
 
     it("should handle backwards date differences", () => {
-      const start = createBusinessDayCalendar(DateTime.fromISO("2024-01-15")); // Monday
+      const start = create(DateTime.fromISO("2024-01-15")); // Monday
       const end = DateTime.fromISO("2024-01-08"); // Previous Monday
 
       const diff = start.diffBusinessDays(end);
@@ -184,13 +246,13 @@ describe("BusinessDayCalendar", () => {
     });
 
     it("should handle two equal dates", () => {
-      const start = createBusinessDayCalendar(DateTime.fromISO("2024-01-15")); // Monday
+      const start = create(DateTime.fromISO("2024-01-15")); // Monday
       const diff = start.diffBusinessDays(DateTime.fromISO("2024-01-15"));
       expect(diff.as("days")).toBe(0);
     });
 
     it("should exclude starting day when option is set", () => {
-      const start = createBusinessDayCalendar(DateTime.fromISO("2024-01-08")); // Monday
+      const start = create(DateTime.fromISO("2024-01-08")); // Monday
       const end = DateTime.fromISO("2024-01-15"); // Next Monday
 
       const diff = start.diffBusinessDays(end, {
@@ -200,8 +262,8 @@ describe("BusinessDayCalendar", () => {
     });
 
     it("should exclude starting day also when going backwards", () => {
-      const start = createBusinessDayCalendar(DateTime.fromISO("2024-01-15")); // Monday
-      const end = createBusinessDayCalendar(DateTime.fromISO("2024-01-08")); // Previous Monday
+      const start = create(DateTime.fromISO("2024-01-15")); // Monday
+      const end = create(DateTime.fromISO("2024-01-08")); // Previous Monday
 
       const diff = start.diffBusinessDays(end, {
         excludeStartingDay: true,
@@ -212,7 +274,7 @@ describe("BusinessDayCalendar", () => {
     it("should handle holidays correctly", () => {
       const isWorkersDay = (date) => date.month === 5 && date.day === 1; // Workers' Day
 
-      const start = createBusinessDayCalendar(
+      const start = create(
         DateTime.fromISO("2024-04-30"), // Tuesday
         {
           holidayMatchers: [isWorkersDay],
@@ -230,7 +292,7 @@ describe("BusinessDayCalendar", () => {
     });
 
     it("should handle weekend start date", () => {
-      const start = createBusinessDayCalendar(DateTime.fromISO("2024-01-06")); // Saturday
+      const start = create(DateTime.fromISO("2024-01-06")); // Saturday
       const end = DateTime.fromISO("2024-01-12"); // Next Saturday
 
       const diff = start.diffBusinessDays(end);
@@ -242,7 +304,7 @@ describe("BusinessDayCalendar", () => {
     });
 
     it("should handle weekend end date", () => {
-      const start = createBusinessDayCalendar(DateTime.fromISO("2024-01-01")); // Monday
+      const start = create(DateTime.fromISO("2024-01-01")); // Monday
       const end = DateTime.fromISO("2024-01-07"); // Sunday
 
       const diff = start.diffBusinessDays(end);
@@ -254,7 +316,7 @@ describe("BusinessDayCalendar", () => {
     });
 
     it("should handle weekend start and end dates", () => {
-      const start = createBusinessDayCalendar(DateTime.fromISO("2024-01-06")); // Saturday
+      const start = create(DateTime.fromISO("2024-01-06")); // Saturday
       const end = DateTime.fromISO("2024-01-14"); // Next Sunday
 
       const diff = start.diffBusinessDays(end);
@@ -268,7 +330,7 @@ describe("BusinessDayCalendar", () => {
     it("should handle holiday start date", () => {
       const isNewYearsDay = (date) => date.month === 1 && date.day === 1;
 
-      const start = createBusinessDayCalendar(
+      const start = create(
         DateTime.fromISO("2024-01-01"), // Monday, January 1st (holiday)
         {
           holidayMatchers: [isNewYearsDay],
@@ -287,7 +349,7 @@ describe("BusinessDayCalendar", () => {
     it("should handle holiday end date", () => {
       const isWorkersDay = (date) => date.month === 5 && date.day === 1;
 
-      const start = createBusinessDayCalendar(
+      const start = create(
         DateTime.fromISO("2024-04-29"), // Monday
         {
           holidayMatchers: [isWorkersDay],
@@ -301,10 +363,8 @@ describe("BusinessDayCalendar", () => {
     });
 
     it("should reject invalid DateTime objects", () => {
-      const start = createBusinessDayCalendar(DateTime.fromISO("2024-01-01")); // Monday
-      const invalidStart = createBusinessDayCalendar(
-        DateTime.fromISO("2024-01-32")
-      ); // Invalid date
+      const start = create(DateTime.fromISO("2024-01-01")); // Monday
+      const invalidStart = create(DateTime.fromISO("2024-01-32")); // Invalid date
 
       const end = DateTime.fromISO("2024-01-08");
       const invalidEnd = DateTime.fromISO("2024-13-08"); // Invalid date
@@ -321,7 +381,7 @@ describe("BusinessDayCalendar", () => {
   // Test plusBusiness method
   describe("plusBusiness", () => {
     it("should add business days correctly", () => {
-      const start = createBusinessDayCalendar(
+      const start = create(
         DateTime.fromISO("2024-01-01") // Monday
       );
       const result = start.plusBusiness(3);
@@ -330,7 +390,7 @@ describe("BusinessDayCalendar", () => {
     });
 
     it("should skip weekends when adding business days", () => {
-      const start = createBusinessDayCalendar(DateTime.fromISO("2024-01-01")); // Monday
+      const start = create(DateTime.fromISO("2024-01-01")); // Monday
       const result = start.plusBusiness(6);
 
       expect(result.toISODate()).toBe("2024-01-09"); // Tuesday (skips weekend)
@@ -339,7 +399,7 @@ describe("BusinessDayCalendar", () => {
     it("should skip holidays when adding business days", () => {
       const isWorkersDay = (date) => date.month === 5 && date.day === 1;
 
-      const start = createBusinessDayCalendar(
+      const start = create(
         DateTime.fromISO("2024-04-29"), // Monday
         {
           holidayMatchers: [isWorkersDay],
@@ -351,24 +411,24 @@ describe("BusinessDayCalendar", () => {
     });
 
     it("should handle week units", () => {
-      const start = createBusinessDayCalendar(DateTime.fromISO("2024-01-01")); // Monday
+      const start = create(DateTime.fromISO("2024-01-01")); // Monday
       const result = start.plusBusiness(1, "week");
 
       expect(result.toISODate()).toBe("2024-01-10"); // Next Wednesday (7 business days)
     });
 
     it("should handle month units", () => {
-      const start = createBusinessDayCalendar(DateTime.fromISO("2024-02-01")); // Monday
+      const start = create(DateTime.fromISO("2024-02-01")); // Monday
       const result = start.plusBusiness(1, "month");
 
       expect(result.toISODate()).toBe("2024-03-14"); // Next Friday (30 business days, no matter which month)
     });
 
     it("should correctly add business days starting from a weekend", () => {
-      const withStartingDay = createBusinessDayCalendar(
+      const withStartingDay = create(
         DateTime.fromISO("2024-01-07") // Sunday
       );
-      const withoutStartingDay = createBusinessDayCalendar(
+      const withoutStartingDay = create(
         DateTime.fromISO("2024-01-07"), // Sunday
         { excludeStartingDay: true }
       );
@@ -383,13 +443,13 @@ describe("BusinessDayCalendar", () => {
     it("should correctly add business days starting from a holiday", () => {
       const isNewYears = (date) => date.month === 1 && date.day === 1;
 
-      const withStartingDay = createBusinessDayCalendar(
+      const withStartingDay = create(
         DateTime.fromISO("2024-01-01"), // Monday (holiday)
         {
           holidayMatchers: [isNewYears],
         }
       );
-      const withoutStartingDay = createBusinessDayCalendar(
+      const withoutStartingDay = create(
         DateTime.fromISO("2024-01-01"), // Monday (holiday)
         {
           holidayMatchers: [isNewYears],
@@ -408,7 +468,7 @@ describe("BusinessDayCalendar", () => {
       const isBoxingDay = (date) => date.month === 12 && date.day === 26;
       const isNewYears = (date) => date.month === 1 && date.day === 1;
 
-      const start = createBusinessDayCalendar(
+      const start = create(
         DateTime.fromISO("2024-12-23"), // Monday
         {
           holidayMatchers: [isChristmas, isBoxingDay, isNewYears],
@@ -420,7 +480,7 @@ describe("BusinessDayCalendar", () => {
     });
 
     it("should correctly handle adding zero business days", () => {
-      const start = createBusinessDayCalendar(DateTime.fromISO("2024-01-01")); // Monday
+      const start = create(DateTime.fromISO("2024-01-01")); // Monday
       const result = start.plusBusiness(0);
 
       expect(result.toISODate()).toBe("2024-01-01"); // Should remain the same
@@ -430,14 +490,14 @@ describe("BusinessDayCalendar", () => {
   // Test minusBusiness method
   describe("minusBusiness", () => {
     it("should subtract business days correctly", () => {
-      const start = createBusinessDayCalendar(DateTime.fromISO("2024-01-04")); // Thursday
+      const start = create(DateTime.fromISO("2024-01-04")); // Thursday
       const result = start.minusBusiness(3);
 
       expect(result.toISODate()).toBe("2024-01-01"); // Monday
     });
 
     it("should skip weekends when subtracting business days", () => {
-      const start = createBusinessDayCalendar(DateTime.fromISO("2024-01-08")); // Monday
+      const start = create(DateTime.fromISO("2024-01-08")); // Monday
       const result = start.minusBusiness(1);
 
       expect(result.toISODate()).toBe("2024-01-05"); // Friday (skips weekend)
@@ -446,7 +506,7 @@ describe("BusinessDayCalendar", () => {
     it("should skip holidays when subtracting business days", () => {
       const isWorkersDay = (date) => date.month === 5 && date.day === 1; // Wednesday
 
-      const start = createBusinessDayCalendar(
+      const start = create(
         DateTime.fromISO("2024-05-02"), // Thursday
         {
           holidayMatchers: [isWorkersDay],
@@ -458,7 +518,7 @@ describe("BusinessDayCalendar", () => {
     });
 
     it("should correctly subtract business days ending on a weekend", () => {
-      const start = createBusinessDayCalendar(DateTime.fromISO("2024-01-08")); // Monday
+      const start = create(DateTime.fromISO("2024-01-08")); // Monday
       const result = start.minusBusiness(1);
 
       expect(result.toISODate()).toBe("2024-01-05"); // Previous Friday (skips weekend)
@@ -468,7 +528,7 @@ describe("BusinessDayCalendar", () => {
       const isNewYears = (date) => date.month === 1 && date.day === 1;
       const isChristmas = (date) => date.month === 12 && date.day === 25;
 
-      const tuesdayAfterHoliday = createBusinessDayCalendar(
+      const tuesdayAfterHoliday = create(
         DateTime.fromISO("2024-01-02"), // Tuesday
         {
           holidayMatchers: [isNewYears],
@@ -476,7 +536,7 @@ describe("BusinessDayCalendar", () => {
       );
       const beforeTuesday = tuesdayAfterHoliday.minusBusiness(1);
 
-      const thursdayAfterChristmas = createBusinessDayCalendar(
+      const thursdayAfterChristmas = create(
         DateTime.fromISO("2024-12-26"), // Thursday
         {
           holidayMatchers: [isChristmas],
@@ -492,7 +552,7 @@ describe("BusinessDayCalendar", () => {
       const isChristmas = (date) => date.month === 12 && date.day === 25;
       const isBoxingDay = (date) => date.month === 12 && date.day === 26;
 
-      const start = createBusinessDayCalendar(
+      const start = create(
         DateTime.fromISO("2024-12-27"), // Friday
         {
           holidayMatchers: [isChristmas, isBoxingDay],
@@ -504,7 +564,7 @@ describe("BusinessDayCalendar", () => {
     });
 
     it("should correctly handle subtracting zero business days", () => {
-      const start = createBusinessDayCalendar(DateTime.fromISO("2023-01-02")); // Monday
+      const start = create(DateTime.fromISO("2023-01-02")); // Monday
       const result = start.minusBusiness(0);
 
       expect(result.toISODate()).toBe("2023-01-02"); // Should remain the same
@@ -514,9 +574,7 @@ describe("BusinessDayCalendar", () => {
   // Test Luxon methods passthrough
   describe("Luxon methods passthrough", () => {
     it("should allow access to Luxon DateTime methods", () => {
-      const calendar = createBusinessDayCalendar(
-        DateTime.fromISO("2024-01-28")
-      );
+      const calendar = create(DateTime.fromISO("2024-01-28"));
 
       expect(calendar.year).toBe(2024);
       expect(calendar.month).toBe(1);
@@ -525,9 +583,7 @@ describe("BusinessDayCalendar", () => {
     });
 
     it("should return BusinessDayCalendar from Luxon methods that return DateTime", () => {
-      const calendar = createBusinessDayCalendar(
-        DateTime.fromISO("2024-01-28")
-      );
+      const calendar = create(DateTime.fromISO("2024-01-28"));
       const tomorrow = calendar.plus({ days: 1 });
 
       expect(tomorrow).toBeInstanceOf(BusinessDayCalendar);
