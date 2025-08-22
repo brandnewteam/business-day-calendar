@@ -236,7 +236,7 @@ export class BusinessDateTime {
    * @returns {BusinessDateTime }
    */
   minusBusiness(duration) {
-    const dur = Duration.fromDurationLike(duration).negate();
+    const dur = Duration.fromDurationLike(duration || {}).negate();
 
     return this.plusBusiness(dur);
   }

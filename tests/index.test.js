@@ -535,9 +535,9 @@ describe("BusinessDateTime", () => {
     it("should correctly handle adding zero business days", () => {
       const businessCalendar = createBusinessCalendar();
       const start = businessCalendar(DateTime.fromISO("2024-01-01")); // Monday
-      const result = start.plusBusiness({ days: 0 });
 
-      expect(result.toISODate()).toBe("2024-01-01"); // Should remain the same
+      expect(start.plusBusiness({ days: 0 }).toISODate()).toBe("2024-01-01"); // Should remain the same
+      expect(start.plusBusiness().toISODate()).toBe("2024-01-01"); // Should remain the same
     });
 
     it("should handle adding a large number of business days", () => {
@@ -659,9 +659,9 @@ describe("BusinessDateTime", () => {
       const businessCalendar = createBusinessCalendar();
 
       const start = businessCalendar(DateTime.fromISO("2024-01-01")); // Monday
-      const result = start.minusBusiness({ days: 0 });
 
-      expect(result.toISODate()).toBe("2024-01-01"); // Should remain the same
+      expect(start.minusBusiness({ days: 0 }).toISODate()).toBe("2024-01-01"); // Should remain the same
+      expect(start.minusBusiness().toISODate()).toBe("2024-01-01"); // Should remain the same
     });
   });
 
