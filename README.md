@@ -1,5 +1,7 @@
 # Business Day Calendar
 
+[![Build and Test in Node.js](https://github.com/brandnewteam/business-day-calendar/actions/workflows/built-and-test.yml/badge.svg)](https://github.com/brandnewteam/business-day-calendar/actions/workflows/built-and-test.yml)
+
 ## Description
 
 A JavaScript library that provides functionality for handling business days using Luxon. It serves as a wrapper around Luxon to simplify the management of business days, including calculations and date manipulations.
