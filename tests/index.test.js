@@ -105,9 +105,14 @@ describe("BusinessDateTime", () => {
 
       // There can be no business days if all days are weekends, plus/minus methods would cause infinite loops
       expect(
-        createBusinessCalendar({
-          weekendDays: [1, 2, 3, 4, 5, 6, 7],
-        })
+        createBusinessCalendar({ weekendDays: [1, 2, 3, 4, 5, 6, 7] })
+      ).toThrow();
+
+      // Outside of range
+      expect(createBusinessCalendar({ weekendDays: [7, 8] })).toThrow();
+
+      expect(
+        createBusinessCalendar({ weekendDays: [0, 1, 2, 3, 4, 5, 6, 7, 8] })
       ).toThrow();
 
       const onlyBusiness = onlyBusinessCalendar(DateTime.fromISO("2024-01-01"));
