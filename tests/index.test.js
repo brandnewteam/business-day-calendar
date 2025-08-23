@@ -30,6 +30,21 @@ describe("BusinessDateTime", () => {
       expect(bcMonday.toISO()).toBe(dtMonday.toISO());
     });
 
+    it("should create a calendar by passing a JavaScript Date object", () => {
+      const businessCalendar = createBusinessCalendar();
+      const monday = new Date(2024, 0, 1); // January 1, 2024
+      const bcMonday = businessCalendar(monday);
+      const now = new Date();
+      const bcNow = businessCalendar(now);
+
+      expect(bcMonday).toBeInstanceOf(BusinessDateTime);
+      expect(bcMonday.isValid).toBe(true);
+      expect(bcMonday.toJSDate().toISOString()).toBe(monday.toISOString());
+      expect(bcNow).toBeInstanceOf(BusinessDateTime);
+      expect(bcNow.isValid).toBe(true);
+      expect(bcNow.toJSDate().toISOString()).toBe(now.toISOString());
+    });
+
     it("should create a calendar with custom weekends day", () => {
       const options = {
         weekendDays: [5, 6], // Only Friday and Saturday are weekend days

@@ -22,8 +22,8 @@ export * from "./holidays/index.js";
  * Create a Business Calendar function (a BusinessDateTime factory) with a defined set of business days and holidays.
  * These options are defined at the creation of this calendar object, and passed on when BusinessDateTime methods return new instances.
  *
- * @param {CreationOptions} options
- * @returns {(date: DateTime) => BusinessDateTime}
+ * @param {CreationOptions} [options]
+ * @returns {(date: DateTime | Date | undefined) => BusinessDateTime}
  */
 export const createBusinessCalendar = (options) => {
   return (date) => {
@@ -42,12 +42,14 @@ export class BusinessDateTime {
 
   /**
    *
-   * @param {DateTime} [date] Defaults to DateTime.now()
+   * @param {DateTime | Date} [date] Defaults to DateTime.now()
    * @param {CreationOptions} [options]
    */
   constructor(date, options) {
     if (typeof date === "undefined") {
       this._DT = DateTime.now();
+    } else if (date instanceof Date) {
+      this._DT = DateTime.fromJSDate(date);
     } else {
       this._DT = DateTime.fromMillis(date.toMillis(), {
         zone: date.zone,
@@ -204,7 +206,7 @@ export class BusinessDateTime {
    * Fractional values are rounded up to the next integer.
    *
    * @param {Duration | DurationLikeObject} duration
-   * @returns {BusinessDateTime}
+   * @returns {BusinessDateTime & DateTime}
    */
   plusBusiness(duration) {
     const dur = Duration.fromDurationLike(duration || {});
@@ -233,7 +235,7 @@ export class BusinessDateTime {
    * See {@link BusinessDateTime.plusBusiness} for more information.
    *
    * @param {Duration | DurationLikeObject} duration
-   * @returns {BusinessDateTime }
+   * @returns {BusinessDateTime & DateTime}
    */
   minusBusiness(duration) {
     const dur = Duration.fromDurationLike(duration || {}).negate();
