@@ -47,7 +47,7 @@ describe("BusinessDateTime", () => {
 
     it("should create a calendar with custom weekends day", () => {
       const options = {
-        weekendDays: [5, 6], // Only Friday and Saturday are weekend days
+        weekendDays: [5, 6], // Override locale's weekend setting, now only Friday and Saturday are weekend days
       };
 
       const businessCalendar = createBusinessCalendar(options);
@@ -82,6 +82,74 @@ describe("BusinessDateTime", () => {
       expect(monday.isBusinessDay()).toBe(false);
     });
 
+    it("should respect the locale business days", () => {
+      const businessCalendar = createBusinessCalendar();
+      const monday = businessCalendar(
+        DateTime.fromObject({ year: 2024, month: 1, day: 1 }, { locale: "he" })
+      );
+      const tuesday = businessCalendar(
+        DateTime.fromObject({ year: 2024, month: 1, day: 2 }, { locale: "he" })
+      );
+      const wednesday = businessCalendar(
+        DateTime.fromObject({ year: 2024, month: 1, day: 3 }, { locale: "he" })
+      );
+      const thursday = businessCalendar(
+        DateTime.fromObject({ year: 2024, month: 1, day: 4 }, { locale: "he" })
+      );
+      const friday = businessCalendar(
+        DateTime.fromObject({ year: 2024, month: 1, day: 5 }, { locale: "he" })
+      );
+      const saturday = businessCalendar(
+        DateTime.fromObject({ year: 2024, month: 1, day: 6 }, { locale: "he" })
+      );
+      const sunday = businessCalendar(
+        DateTime.fromObject({ year: 2024, month: 1, day: 7 }, { locale: "he" })
+      );
+
+      expect(monday.isBusinessDay()).toBe(true);
+      expect(tuesday.isBusinessDay()).toBe(true);
+      expect(wednesday.isBusinessDay()).toBe(true);
+      expect(thursday.isBusinessDay()).toBe(true);
+      expect(friday.isBusinessDay()).toBe(false);
+      expect(saturday.isBusinessDay()).toBe(false);
+      expect(sunday.isBusinessDay()).toBe(true);
+    });
+
+    it("should override business day despite the locale", () => {
+      const businessCalendar = createBusinessCalendar({
+        weekendDays: [1, 2, 3, 4],
+      });
+      const monday = businessCalendar(
+        DateTime.fromObject({ year: 2024, month: 1, day: 1 }, { locale: "he" })
+      );
+      const tuesday = businessCalendar(
+        DateTime.fromObject({ year: 2024, month: 1, day: 2 }, { locale: "he" })
+      );
+      const wednesday = businessCalendar(
+        DateTime.fromObject({ year: 2024, month: 1, day: 3 }, { locale: "he" })
+      );
+      const thursday = businessCalendar(
+        DateTime.fromObject({ year: 2024, month: 1, day: 4 }, { locale: "he" })
+      );
+      const friday = businessCalendar(
+        DateTime.fromObject({ year: 2024, month: 1, day: 5 }, { locale: "he" })
+      );
+      const saturday = businessCalendar(
+        DateTime.fromObject({ year: 2024, month: 1, day: 6 }, { locale: "he" })
+      );
+      const sunday = businessCalendar(
+        DateTime.fromObject({ year: 2024, month: 1, day: 7 }, { locale: "he" })
+      );
+
+      expect(monday.isBusinessDay()).toBe(false);
+      expect(tuesday.isBusinessDay()).toBe(false);
+      expect(wednesday.isBusinessDay()).toBe(false);
+      expect(thursday.isBusinessDay()).toBe(false);
+      expect(friday.isBusinessDay()).toBe(true);
+      expect(saturday.isBusinessDay()).toBe(true);
+      expect(sunday.isBusinessDay()).toBe(true);
+    });
+
     it("should implement valueOf like DateTime", () => {
       const businessCalendar = createBusinessCalendar();
 
@@ -114,10 +182,6 @@ describe("BusinessDateTime", () => {
     });
 
     it("should handle problematic weekend days array", () => {
-      const onlyBusinessCalendar = createBusinessCalendar({
-        weekendDays: [],
-      });
-
       // There can be no business days if all days are weekends, plus/minus methods would cause infinite loops
       expect(
         createBusinessCalendar({ weekendDays: [1, 2, 3, 4, 5, 6, 7] })
@@ -129,6 +193,10 @@ describe("BusinessDateTime", () => {
       expect(
         createBusinessCalendar({ weekendDays: [0, 1, 2, 3, 4, 5, 6, 7, 8] })
       ).toThrow();
+
+      const onlyBusinessCalendar = createBusinessCalendar({
+        weekendDays: [],
+      });
 
       const onlyBusiness = onlyBusinessCalendar(DateTime.fromISO("2024-01-01"));
 

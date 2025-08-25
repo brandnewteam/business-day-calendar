@@ -42,15 +42,33 @@ const today = businessCalendar(DateTime.now()); // BusinessDateTime & DateTime
 
 A Business Calendar allows you to create `BusinessDateTime` objects that inherit the weekend and holidays set in that calendar. These objects are Luxon `DateTime` objects with additional methods to perform operations related to business days.
 
+## Setting the Locale
+
+You can set the locale globally for all Luxon DateTime objects:
+
+```javascript
+import { Settings } from "luxon";
+Settings.defaultLocale = "it"; // Set default locale to Italian
+```
+
+Or set the locale on an individual DateTime object:
+
+```javascript
+import { DateTime } from "luxon";
+const dt = DateTime.now().setLocale("fr"); // Set locale to French for this DateTime only
+```
+
+The **locale** defines which days are considered part of the **weekend**, and will be used to determine business days unless overridden at Calendar creation.
+
 ## API
 
 ### `createBusinessCalendar(options?: CreationOptions): (DateTime) => BusinessDateTime`
 
 Creates a new Business Calendar instance with the given options:
 
-- `options` (optional) :
-  - `weekendDays` (number[]): ISO weekday numbers (1=Monday ... 7=Sunday). Defaults to `[6, 7]` (Saturday and Sunday).
+- `options` (optional):
   - `holidayMatchers` (function[]): An array of functions `(date: DateTime) => boolean` to mark holidays. See the [Holiday Matchers](#holiday-matchers) section for predefined holiday matchers.
+  - `weekendDays` (number[]): ISO weekday numbers (1=Monday ... 7=Sunday). By default, weekend days are inferred from the current locale (either the Luxon global default locale or the locale set on the DateTime you pass in). Use this option **only** to override the weekend days derived from the locale. If not specified, the locale's weekend days are used.
 
 Returns: a `BusinessDateTime` factory function, a Business Calendar.
 

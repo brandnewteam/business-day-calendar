@@ -38,10 +38,10 @@ export class BusinessDateTime {
   _DT;
 
   /** @type {WeekdayNumbers[] | undefined} */
-  _bcWeekendDays;
+  _bcWeekendOverride;
 
   /** @type {HolidayMatcher[]} */
-  _bcHolidayMatchers = [];
+  _bcHolidayMatchers;
 
   /**
    *
@@ -64,54 +64,49 @@ export class BusinessDateTime {
 
     const opts = options || {};
 
-    this._bcWeekendDays = Array.from(new Set(opts.weekendDays || [6, 7]));
     this._bcHolidayMatchers = opts.holidayMatchers || [];
 
-    if (
-      Math.max(...this._bcWeekendDays) > 7 ||
-      Math.min(...this._bcWeekendDays) < 0
-    ) {
-      throw new Error("Invalid weekendDays option");
-    }
-
-    if (this._bcWeekendDays.length > 6) {
-      throw new Error("Invalid weekendDays option");
+    // This option is generally passed by the createBusinessCalendar function, not when recreating the object
+    if (opts.weekendDays) {
+      const days = Array.from(new Set(opts.weekendDays));
+      if (days.length > 6 || Math.min(...days) < 1 || Math.max(...days) > 7) {
+        throw new Error("Invalid weekendDays option");
+      }
+      this._bcWeekendOverride = days;
     }
 
     return new Proxy(this, {
       get(target, prop) {
-        // If the property exists on the target (not inherited), return it directly
         if (Object.prototype.hasOwnProperty.call(target, prop)) {
-          // @ts-ignore
+          // @ts-ignore The runtime check above assures that the property exists in BusinessDateTime's prototype.
           return target[prop];
         }
 
-        // If property is a method on Object.prototype that we want to override
-        // @ts-ignore
+        // @ts-ignore The given property is a method that we want to call on DateTime
         if (["toString", "toLocaleString", "valueOf"].includes(prop)) {
-          // @ts-ignore
+          // @ts-ignore We know these methods are present in DateTime's prototype.
           const dateMethod = target._DT[prop];
           if (typeof dateMethod === "function") {
-            // @ts-ignore
+            // @ts-ignore We pass args as-is.
             return (...args) => dateMethod.apply(target._DT, args);
           }
         }
 
         if (prop in target) {
-          // @ts-ignore
+          // @ts-ignore The property/method exists in BusinessDateTime's prototype's chain.
           return target[prop];
         }
 
-        // @ts-ignore
+        // @ts-ignore Get the property from DateTime
         const value = target._DT[prop];
 
         if (typeof value === "function") {
-          // @ts-ignore
+          // @ts-ignore the property is a method that exists in DateTime's prototype, we pass arguments as-is.
           return (...args) => {
             const result = value.apply(target._DT, args);
             if (result instanceof DateTime) {
               return new BusinessDateTime(result, {
-                weekendDays: target._bcWeekendDays,
+                weekendDays: target._bcWeekendOverride,
                 holidayMatchers: target._bcHolidayMatchers,
               });
             }
@@ -125,9 +120,16 @@ export class BusinessDateTime {
   }
 
   isBusinessDay() {
-    const dayOfWeek = this._DT.weekday;
-
-    if (this._bcWeekendDays.includes(dayOfWeek)) {
+    if (this._bcWeekendOverride) {
+      if (
+        this._bcWeekendOverride.includes(
+          // @ts-ignore _bcWeekendOverride is a type of WeekdayNumbers[], which is a subset of number[].
+          this._DT.weekday
+        )
+      ) {
+        return false;
+      }
+    } else if (this._DT.isWeekend) {
       return false;
     }
 
