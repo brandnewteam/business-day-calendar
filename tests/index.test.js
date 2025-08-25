@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { DateTime } from "luxon";
 import { createBusinessCalendar, BusinessDateTime } from "../src/index.js";
+import util from "node:util";
 
 /**
  * A predicate that returns true when the given date is a holiday.
@@ -745,6 +746,46 @@ describe("BusinessDateTime", () => {
 
       expect(start.minusBusiness({ days: 0 }).toISODate()).toBe("2024-01-01"); // Should remain the same
       expect(start.minusBusiness().toISODate()).toBe("2024-01-01"); // Should remain the same
+    });
+  });
+
+  describe("nodejs.util.inspect.custom", () => {
+    it("should return the custom inspect string for a valid BusinessDateTime", () => {
+      const businessCalendar = createBusinessCalendar();
+
+      const dt = DateTime.fromISO("2024-01-01", {
+        zone: "utc",
+        locale: "en-GB",
+      });
+      const bdt = businessCalendar(dt);
+
+      const direct = bdt[Symbol.for("nodejs.util.inspect.custom")]();
+      const expected = `DateTime { ts: ${dt.toISO()}, zone: ${
+        dt.zone.name
+      }, locale: ${dt.locale} }`;
+
+      expect(direct).toBe(expected);
+
+      const originalInspect = util.inspect(dt);
+      const viaInspect = util.inspect(bdt);
+      expect(originalInspect).toBe(direct);
+      expect(viaInspect).toBe(direct);
+    });
+
+    it("should return the custom inspect string for an invalid BusinessDateTime", () => {
+      const businessCalendar = createBusinessCalendar();
+
+      const invalidDt = DateTime.fromISO("2024-13-37"); // invalid
+      const invalidBdt = businessCalendar(invalidDt);
+
+      const direct = invalidBdt[Symbol.for("nodejs.util.inspect.custom")]();
+
+      expect(direct).toContain("DateTime { Invalid, reason:");
+      const viaInspect = util.inspect(invalidBdt);
+
+      expect(viaInspect).toBe(direct);
+      expect(viaInspect).toContain("Invalid");
+      expect(viaInspect).toContain("reason");
     });
   });
 

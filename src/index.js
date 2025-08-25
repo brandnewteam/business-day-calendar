@@ -247,4 +247,13 @@ export class BusinessDateTime {
 
     return this.plusBusiness(dur);
   }
+
+  /**
+   * Returns a string representation of this DateTime appropriate for the REPL.
+   * @return {string}
+   */
+  [Symbol.for("nodejs.util.inspect.custom")]() {
+    // @ts-ignore
+    return this._DT[Symbol.for("nodejs.util.inspect.custom")]();
+  }
 }
