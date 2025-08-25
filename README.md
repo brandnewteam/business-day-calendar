@@ -31,7 +31,10 @@ import { createBusinessCalendar } from "business-day-calendar";
 import { DateTime } from "luxon";
 
 const businessCalendar = createBusinessCalendar({
-  weekendDays: [5, 6], // Custom weekend: Friday to Saturday
+  holidayMatchers: [
+    (date) => date.month === 1 && date.day === 1,
+    (date) => date.month === 12 && date.day === 25,
+  ],
 });
 
 const today = businessCalendar(DateTime.now()); // BusinessDateTime & DateTime

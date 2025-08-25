@@ -10,31 +10,34 @@ export * from "./holidays/index.js";
  * @returns {boolean}
  */
 
+/** @typedef {import("luxon").DurationLikeObject} DurationLikeObject */
+/** @typedef {import("luxon").WeekdayNumbers} WeekdayNumbers */
+
 /**
  * @typedef {Object} CreationOptions
- * @property {number[]} [weekendDays] - ISO weekday numbers 1-7 (Mon=1 .. Sun=7). Defaults to [6,7].
  * @property {HolidayMatcher[]} [holidayMatchers] - A list of functions that mark a date as a holiday.
+ * @property {WeekdayNumbers[]} [weekendDays] - Override locale weekend settings. ISO weekday numbers (Mon=1 .. Sun=7). Unless specified, the current locale's settings are used.
  */
-
-/** @typedef {import("luxon").DurationLikeObject} DurationLikeObject */
 
 /**
  * Create a Business Calendar function (a BusinessDateTime factory) with a defined set of business days and holidays.
  * These options are defined at the creation of this calendar object, and passed on when BusinessDateTime methods return new instances.
  *
  * @param {CreationOptions} [options]
- * @returns {(date: DateTime | Date | undefined) => BusinessDateTime}
+ * @returns {(date: DateTime | Date | undefined) => BusinessDateTime & DateTime}
  */
 export const createBusinessCalendar = (options) => {
+  // @ts-ignore BusinessDateTime is a Proxy object for DateTime, hence {BusinessDateTime & DateTime}
   return (date) => {
     return new BusinessDateTime(date, options);
   };
 };
 
 export class BusinessDateTime {
+  /** @type {DateTime} */
   _DT;
 
-  /** @type {number[]} */
+  /** @type {WeekdayNumbers[] | undefined} */
   _bcWeekendDays;
 
   /** @type {HolidayMatcher[]} */
