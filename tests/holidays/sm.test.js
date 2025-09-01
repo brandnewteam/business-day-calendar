@@ -55,6 +55,29 @@ describe("San Marino Holidays", () => {
     });
   });
 
+  describe("isChangeOfCaptainRegents", () => {
+    it("should recognize April 1st as Change of Captain Regents", () => {
+      const changeOfCaptainRegents = DateTime.fromISO("2025-04-01");
+      expect(smHolidays.isChangeOfCaptainRegents(changeOfCaptainRegents)).toBe(
+        true
+      );
+    });
+
+    it("should recognize October 1st as Change of Captain Regents", () => {
+      const changeOfCaptainRegents = DateTime.fromISO("2025-10-01");
+      expect(smHolidays.isChangeOfCaptainRegents(changeOfCaptainRegents)).toBe(
+        true
+      );
+    });
+
+    it("should not recognize other days as Change of Captain Regents", () => {
+      const notChangeOfCaptainRegents = DateTime.fromISO("2025-04-02");
+      expect(
+        smHolidays.isChangeOfCaptainRegents(notChangeOfCaptainRegents)
+      ).toBe(false);
+    });
+  });
+
   describe("isEasterSunday", () => {
     it("should recognize Easter Sunday correctly", () => {
       // Easter Sunday 2025 is on April 20

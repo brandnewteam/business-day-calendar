@@ -31,6 +31,14 @@ export const isArengoAnniversary = (date) =>
   date.month === 3 && date.day === 25;
 
 /**
+ * Checks if the date is the change of the Captain Regents
+ * @param {DateTime} date
+ * @returns {boolean}
+ */
+export const isChangeOfCaptainRegents = (date) =>
+  date.day === 1 && (date.month === 4 || date.month === 10);
+
+/**
  * Checks if the date is Easter Sunday (calculated using the utility function)
  * @param {DateTime} date
  * @returns {boolean}
