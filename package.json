@@ -1,6 +1,6 @@
 {
   "name": "business-day-calendar",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "luxon wrapper for business days functionality",
   "type": "module",
   "main": "./dist/index.cjs",
