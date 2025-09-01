@@ -242,7 +242,7 @@ describe("San Marino Holidays", () => {
   describe("getHolidays", () => {
     it("should return all San Marino holidays", () => {
       const holidays = smHolidays.getHolidays();
-      expect(holidays.length).toBe(16); // There are 16 San Marino holidays
+      expect(holidays.length).toBe(17); // The holidays in San Marino
 
       // Verify a few specific holidays are included
       expect(holidays).toContain(smHolidays.isNewYearsDay);

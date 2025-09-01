@@ -153,6 +153,7 @@ export const getHolidays = () => [
   isEpiphany,
   isSaintAgathaDay,
   isArengoAnniversary,
+  isChangeOfCaptainRegents,
   isEasterSunday,
   isEasterMonday,
   isWorkersDay,
