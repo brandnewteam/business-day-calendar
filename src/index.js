@@ -24,7 +24,7 @@ export * from "./holidays/index.js";
  * These options are defined at the creation of this calendar object, and passed on when BusinessDateTime methods return new instances.
  *
  * @param {CreationOptions} [options]
- * @returns {(date: DateTime | Date | undefined) => BusinessDateTime & DateTime}
+ * @returns {(date?: DateTime | Date) => BusinessDateTime & DateTime}
  */
 export const createBusinessCalendar = (options) => {
   // @ts-ignore BusinessDateTime is a Proxy object for DateTime, hence {BusinessDateTime & DateTime}
