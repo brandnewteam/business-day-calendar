@@ -304,6 +304,42 @@ describe("BusinessDateTime", () => {
   });
 
   describe("diffBusinessDays", () => {
+    it("should work like DateTime.diff when no business days are involved", () => {
+      const businessCalendar = createBusinessCalendar();
+      const dtStart = DateTime.fromISO("2024-01-01"); // Monday
+      const dtEnd = DateTime.fromISO("2024-01-05"); // Friday
+      const bcStart = businessCalendar(dtStart);
+      const bcEnd = businessCalendar(dtEnd);
+
+      const dtDiff = dtStart.diff(dtEnd, "days");
+      const bcDiff = bcStart.diffBusinessDays(bcEnd);
+
+      const dtDiffInverted = dtEnd.diff(dtStart, "days");
+      const bcDiffInverted = bcEnd.diffBusinessDays(bcStart);
+
+      expect(bcDiff.as("days")).toBe(dtDiff.as("days")); // -4 days
+      expect(bcDiffInverted.as("days")).toBe(dtDiffInverted.as("days")); // 4 days
+    });
+
+    it("should keep the same time when diffing business days", () => {
+      const businessCalendar = createBusinessCalendar();
+
+      const mon = businessCalendar(DateTime.fromISO("2024-01-01T10:05:25.000")); // Monday
+      const fri = businessCalendar(DateTime.fromISO("2024-01-05T09:55:42.000")); // Friday
+
+      const bcForwardDiff = mon.diffBusinessDays(fri);
+      const dtForwardDiff = mon.diff(fri);
+      expect(bcForwardDiff.rescale().toObject()).toStrictEqual(
+        dtForwardDiff.rescale().toObject()
+      );
+
+      const bcBackwardDiff = fri.diffBusinessDays(mon);
+      const dtBackwardDiff = fri.diff(mon);
+      expect(bcBackwardDiff.rescale().toObject()).toStrictEqual(
+        dtBackwardDiff.rescale().toObject()
+      );
+    });
+
     it("should work with either another BusinessDateTime or a plain DateTime", () => {
       const businessCalendar = createBusinessCalendar();
 
@@ -314,8 +350,10 @@ describe("BusinessDateTime", () => {
       const dtEnd = DateTime.fromISO("2024-01-08"); // Monday
       const calEnd = businessCalendar(DateTime.fromISO("2024-01-08")); // Monday
 
-      expect(start.diffBusinessDays(dtEnd).as("days")).toBe(5); // 5 business days (Mon, Tue, Wed, Thu, Fri)
-      expect(start.diffBusinessDays(calEnd).as("days")).toBe(5); // 5 business days (Mon, Tue, Wed, Thu, Fri)
+      expect(start.diffBusinessDays(dtEnd).days).toBe(-5); // 5 business days (Mon, Tue, Wed, Thu, Fri)
+      expect(start.diffBusinessDays(calEnd).days).toBe(-5); // 5 business days (Mon, Tue, Wed, Thu, Fri)
+      expect(start.diffBusinessDays(dtEnd).as("days")).toBe(-5); // 5 business days (Mon, Tue, Wed, Thu, Fri)
+      expect(start.diffBusinessDays(calEnd).as("days")).toBe(-5); // 5 business days (Mon, Tue, Wed, Thu, Fri)
     });
 
     it("should count business days between two dates with weekend in between", () => {
@@ -327,18 +365,21 @@ describe("BusinessDateTime", () => {
       const diffFri = mon.diffBusinessDays(nextFri);
       const diffMon = mon.diffBusinessDays(nextMon);
 
-      expect(diffFri.as("days")).toBe(4); // 4 business days (Mon, Tue, Wed, Thu)
-      expect(diffMon.as("days")).toBe(5); // 5 business days (Mon, Tue, Wed, Thu, Fri)
+      expect(diffFri.as("days")).toBe(-4); // 4 business days (Mon, Tue, Wed, Thu)
+      expect(diffMon.as("days")).toBe(-5); // 5 business days (Mon, Tue, Wed, Thu, Fri)
     });
 
     it("should handle backwards date differences", () => {
       const businessCalendar = createBusinessCalendar();
-      const start = businessCalendar(DateTime.fromISO("2024-01-15")); // Monday
-      const end = DateTime.fromISO("2024-01-08"); // Previous Monday
+      const laterMonday = businessCalendar(DateTime.fromISO("2024-01-15")); // Monday
+      const earlierMonday = DateTime.fromISO("2024-01-08"); // Previous Monday
 
-      const diff = start.diffBusinessDays(end);
+      const diff = laterMonday.diffBusinessDays(earlierMonday);
+      const diffInverted =
+        businessCalendar(earlierMonday).diffBusinessDays(laterMonday);
 
-      expect(diff.as("days")).toBe(-5); // -5 business days (Fri, Thu, Wed, Tue, Mon)
+      expect(diff.as("days")).toBe(5); // -5 business days (Fri, Thu, Wed, Tue, Mon)
+      expect(diffInverted.as("days")).toBe(-5); // 5 business days (Mon, Tue, Wed, Thu, Fri)
     });
 
     it("should handle two equal dates", () => {
@@ -358,7 +399,7 @@ describe("BusinessDateTime", () => {
         excludeStartingDay: true,
       });
 
-      expect(diff.as("days")).toBe(4); // 4 business days (Tue-Fri)
+      expect(diff.as("days")).toBe(-4); // 4 business days (Tue-Fri)
     });
 
     it("should exclude starting day also when going backwards", () => {
@@ -370,7 +411,7 @@ describe("BusinessDateTime", () => {
         excludeStartingDay: true,
       });
 
-      expect(diff.as("days")).toBe(-4); // 4 business days (Fri, Thu, Wed, Tue)
+      expect(diff.as("days")).toBe(4); // 4 business days (Fri, Thu, Wed, Tue)
     });
 
     it("should handle holidays between two dates", () => {
@@ -392,8 +433,8 @@ describe("BusinessDateTime", () => {
         excludeStartingDay: true,
       });
 
-      expect(diff.as("days")).toBe(2); // 2 business days (Tue, Thu) - Wed is a holiday
-      expect(diffWithoutStart.as("days")).toBe(1); // 1 business days (Thu) - Wed is a holiday
+      expect(diff.as("days")).toBe(-2); // 2 business days (Tue, Thu) - Wed is a holiday
+      expect(diffWithoutStart.as("days")).toBe(-1); // 1 business days (Thu) - Wed is a holiday
     });
 
     it("should handle weekend start date", () => {
@@ -406,8 +447,8 @@ describe("BusinessDateTime", () => {
         excludeStartingDay: true,
       });
 
-      expect(diff.as("days")).toBe(4); // 4 business days (Mon-Thu)
-      expect(diffWithoutStart.as("days")).toBe(4); // 4 business days (Mon-Thu)
+      expect(diff.as("days")).toBe(-4); // 4 business days (Mon-Thu)
+      expect(diffWithoutStart.as("days")).toBe(-4); // 4 business days (Mon-Thu)
     });
 
     it("should handle weekend end date", () => {
@@ -420,8 +461,8 @@ describe("BusinessDateTime", () => {
         excludeStartingDay: true,
       });
 
-      expect(diff.as("days")).toBe(5); // 5 business days (Mon-Fri)
-      expect(diffWithoutStart.as("days")).toBe(4); // 4 business days (Tue-Fri)
+      expect(diff.as("days")).toBe(-5); // 5 business days (Mon-Fri)
+      expect(diffWithoutStart.as("days")).toBe(-4); // 4 business days (Tue-Fri)
     });
 
     it("should handle weekend start and end dates", () => {
@@ -434,8 +475,8 @@ describe("BusinessDateTime", () => {
         excludeStartingDay: true,
       });
 
-      expect(diff.as("days")).toBe(5); // 5 business days (Mon-Fri)
-      expect(diffWithoutStart.as("days")).toBe(5); // 4 business days (Tue-Fri)
+      expect(diff.as("days")).toBe(-5); // 5 business days (Mon-Fri)
+      expect(diffWithoutStart.as("days")).toBe(-5); // 5 business days (Mon-Fri)
     });
 
     it("should handle holiday start date", () => {
@@ -455,8 +496,8 @@ describe("BusinessDateTime", () => {
         excludeStartingDay: true,
       });
 
-      expect(diff.as("days")).toBe(4); // 4 business days (Tue-Fri)
-      expect(diffWithoutStart.as("days")).toBe(4); // 4 business days (Tue-Fri)
+      expect(diff.as("days")).toBe(-4); // 4 business days (Tue-Fri)
+      expect(diffWithoutStart.as("days")).toBe(-4); // 4 business days (Tue-Fri)
     });
 
     it("should handle holiday end date", () => {
@@ -473,7 +514,7 @@ describe("BusinessDateTime", () => {
       const end = DateTime.fromISO("2024-05-01"); // Wednesday (Workers' Day)
       const diff = start.diffBusinessDays(end);
 
-      expect(diff.as("days")).toBe(2); // 1 business days (Mon, Tue)
+      expect(diff.as("days")).toBe(-2); // 1 business days (Mon, Tue)
     });
 
     it("should reject invalid DateTime objects", () => {
@@ -508,6 +549,17 @@ describe("BusinessDateTime", () => {
       expect(result.toISODate()).toBe("2024-01-04"); // Thursday
     });
 
+    it("should keep the same time when adding business days", () => {
+      const businessCalendar = createBusinessCalendar();
+
+      const start = businessCalendar(DateTime.fromISO("2024-01-01T10:00:00")); // Monday
+      const result = start.plusBusiness({ days: 3 });
+
+      expect(result.toISO({ includeOffset: false })).toBe(
+        "2024-01-04T10:00:00.000"
+      );
+    });
+
     it("should skip weekends when adding business days", () => {
       const businessCalendar = createBusinessCalendar();
 
@@ -540,7 +592,7 @@ describe("BusinessDateTime", () => {
       const result = start.plusBusiness({ weeks: 1 });
 
       expect(result.toISODate()).toBe("2024-01-10"); // Next Wednesday (7 business days)
-      expect(result.diffBusinessDays(start).as("days")).toBe(-7); // 7 business days
+      expect(result.diffBusinessDays(start).as("days")).toBe(7); // 7 business days
       expect(result.diff(start).as("days")).toBe(9); // 9 natural days
     });
 
@@ -551,7 +603,7 @@ describe("BusinessDateTime", () => {
       const result = start.plusBusiness({ months: 1 });
 
       expect(result.toISODate()).toBe("2024-03-14"); // 30 business days, no matter which month
-      expect(result.diffBusinessDays(start).as("days")).toBe(-30); // 30 business days
+      expect(result.diffBusinessDays(start).as("days")).toBe(30); // 30 business days
       expect(result.diff(start).as("days")).toBe(42); // 42 natural days
     });
 

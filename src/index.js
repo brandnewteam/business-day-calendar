@@ -162,6 +162,8 @@ export class BusinessDateTime {
       options
     );
 
+    const otherIsLater = otherDateTime.valueOf() > this._DT.valueOf();
+
     /** @type {BusinessDateTime & DateTime} */
     // @ts-ignore
     let start = this.startOf("day");
@@ -177,7 +179,7 @@ export class BusinessDateTime {
     let businessDays = 0;
 
     // Forwards in time
-    if (this._DT.valueOf() < otherDateTime.valueOf()) {
+    if (otherIsLater) {
       if (start.isBusinessDay() && opts.excludeStartingDay) {
         start = start.plus({ days: 1 });
       }
@@ -201,9 +203,39 @@ export class BusinessDateTime {
       } while (start._DT.valueOf() > end.valueOf());
     }
 
-    return Duration.fromObject({
-      days: businessDays,
-    });
+    // If we ask for days already in the diff call, there could be floating point rounding issues when converting to days.
+    const originalDiff = this._DT.diff(otherDateTime, "milliseconds");
+
+    // We convert the difference to days as a floating point number.
+    const everyDayFloat = originalDiff.as("days");
+
+    // We get the difference of "complete" or "full" days between the two dates. Since the number
+    // can be negative (depending on the direction of the diff), we need to either round up or down.
+    // We then discard the sign to help with the calculation of non-business days.
+    const anyDayInt = Math.abs(
+      otherIsLater ? Math.floor(everyDayFloat) : Math.ceil(everyDayFloat)
+    );
+
+    // Once we have the total amount of days and the business days, we can calculate the non-business days
+    // so we can add/subtract them from the original diff.
+    const businessDaysInt = Math.abs(businessDays);
+    const nonBusinessDaysInt = anyDayInt - businessDaysInt;
+
+    let businessDiff;
+
+    // When the diff method is called passing another DateTime as an argument which is later in time,
+    // the resulting Duration should be negative, and vice versa. So we add when otherIsLater is true and
+    // subtract when it's false.
+    if (otherIsLater) {
+      businessDiff = originalDiff.plus({ days: nonBusinessDaysInt });
+    } else {
+      businessDiff = originalDiff.minus({ days: nonBusinessDaysInt });
+    }
+
+    return businessDiff
+      .shiftTo("days", "hours", "minutes", "seconds", "milliseconds")
+      .normalize()
+      .removeZeros();
   }
 
   /**
