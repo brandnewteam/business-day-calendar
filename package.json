@@ -49,9 +49,9 @@
     "@types/luxon": "^3.7.1",
     "@vitest/coverage-v8": "^4.0.10",
     "eslint": "^9.32.0",
-    "globals": "^16.3.0",
+    "globals": "^17.4.0",
     "luxon": "3.x.x",
-    "rolldown": "^1.0.0-beta.42",
+    "rolldown": "^1.0.0-rc.10",
     "typescript": "^5.9.2",
     "vitest": "^4.0.10"
   }
