@@ -4,14 +4,13 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "outDir": "dist",
-    "removeComments": true,
+    "rootDir": "src",
+    "removeComments": false,
     "checkJs": true,
     "strict": true,
     "module": "ESNext",
     "target": "ESNext",
     "moduleResolution": "bundler"
   },
-  "include": [
-    "src/index.js"
-  ]
+  "include": ["src/index.js"]
 }
