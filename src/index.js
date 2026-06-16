@@ -34,13 +34,22 @@ export const createBusinessCalendar = (options) => {
 };
 
 export class BusinessDateTime {
-  /** @type {DateTime} */
+  /**
+   * @private
+   * @type {DateTime}
+   */
   _DT;
 
-  /** @type {WeekdayNumbers[] | undefined} */
+  /**
+   * @private
+   * @type {WeekdayNumbers[] | undefined}
+   */
   _bcWeekendOverride;
 
-  /** @type {HolidayMatcher[]} */
+  /**
+   * @private
+   * @type {HolidayMatcher[]}
+   */
   _bcHolidayMatchers;
 
   /**

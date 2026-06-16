@@ -8,9 +8,14 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./package.json": "./package.json"
   },
@@ -25,7 +30,7 @@
     "clean": "rm -rf dist",
     "build": "npm run clean && npm run build:rolldown && npm run build:types",
     "build:rolldown": "rolldown -c",
-    "build:types": "tsc --emitDeclarationOnly --allowJs --declaration --outDir dist --project tsconfig.json",
+    "build:types": "tsc --emitDeclarationOnly --allowJs --declaration --outDir dist --project tsconfig.json && node scripts/emit-cjs-dts.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

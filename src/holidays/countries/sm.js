@@ -2,6 +2,13 @@ import { DateTime } from "luxon";
 import { calculateEaster } from "../utils.js";
 
 /**
+ * A predicate that returns true when the given date is a holiday.
+ * @callback HolidayMatcher
+ * @param {DateTime} date
+ * @returns {boolean}
+ */
+
+/**
  * Checks if the date is New Year's Day (January 1)
  * @param {DateTime} date
  * @returns {boolean}
@@ -146,7 +153,7 @@ export const isStStephensDay = (date) => date.month === 12 && date.day === 26;
 
 /**
  * Returns all San Marino Holiday matchers
- * @returns {Array<function(DateTime): boolean>}
+ * @returns {HolidayMatcher[]}
  */
 export const getHolidays = () => [
   isNewYearsDay,
