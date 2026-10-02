@@ -114,7 +114,7 @@ The library comes with predefined holiday matchers for different countries and r
 
 ### Available Holiday Groups
 
-For more details, see the [Holiday Documentation](src/holidays/README.md).
+Statutory public holidays for all 27 EU countries, San Marino and the United States, keyed by ISO country code (`holidays.DE.all`, `holidays.FR.all`, …), with regional sets where regions have their own legal holidays (`holidays.DE.regions.BY`, `holidays.ES.regions.CT`, `holidays.PT.regions["30"]`, …). Names are in the official language of each country. For the full list and the modelling notes per country, see the [Holiday Documentation](src/holidays/README.md).
 
 ### Example Usage
 
