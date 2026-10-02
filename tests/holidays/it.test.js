@@ -5,6 +5,7 @@ import {
   calculateEaster,
   calculateEasterMonday,
 } from "../../src/holidays/utils.js";
+import { listHolidays } from "../../src/holidays/index.js";
 
 describe("Italian Holidays", () => {
   describe("isNewYearsDay", () => {
@@ -230,6 +231,60 @@ describe("Italian Holidays", () => {
       expect(holidays).toContain(itHolidays.isSaintFrancisDay);
       expect(holidays).toContain(itHolidays.isChristmasDay);
       expect(holidays).toContain(itHolidays.isStStephensDay);
+    });
+  });
+});
+
+describe("Italian Regional Holidays", () => {
+  describe("isWhitMonday", () => {
+    it("should recognize Whit Monday (50 days after Easter Sunday)", () => {
+      // Easter Sunday 2026 is on April 5, so Whit Monday is May 25
+      expect(itHolidays.isWhitMonday(DateTime.fromISO("2026-05-25"))).toBe(
+        true
+      );
+      // Easter Sunday 2025 is on April 20, so Whit Monday is June 9
+      expect(itHolidays.isWhitMonday(DateTime.fromISO("2025-06-09"))).toBe(
+        true
+      );
+    });
+
+    it("should not recognize other days as Whit Monday", () => {
+      expect(itHolidays.isWhitMonday(DateTime.fromISO("2026-05-24"))).toBe(
+        false
+      );
+      expect(itHolidays.isWhitMonday(DateTime.fromISO("2026-05-26"))).toBe(
+        false
+      );
+    });
+  });
+
+  describe("getRegionalHolidays", () => {
+    it("should list the 2026 holidays of the Province of Bolzano (BZ)", () => {
+      expect(listHolidays(itHolidays.getRegionalHolidays().BZ, 2026)).toEqual([
+        { name: "Capodanno", month: 1, day: 1 },
+        { name: "Epifania", month: 1, day: 6 },
+        { name: "Pasqua", month: 4, day: 5 },
+        { name: "Lunedì dell'Angelo", month: 4, day: 6 },
+        { name: "Festa della Liberazione", month: 4, day: 25 },
+        { name: "Festa dei Lavoratori", month: 5, day: 1 },
+        { name: "Lunedì di Pentecoste", month: 5, day: 25 },
+        { name: "Festa della Repubblica", month: 6, day: 2 },
+        { name: "Assunzione di Maria", month: 8, day: 15 },
+        { name: "San Francesco d'Assisi", month: 10, day: 4 },
+        { name: "Ognissanti", month: 11, day: 1 },
+        { name: "Immacolata Concezione", month: 12, day: 8 },
+        { name: "Natale", month: 12, day: 25 },
+        { name: "Santo Stefano", month: 12, day: 26 },
+      ]);
+    });
+
+    it("should expose BZ and include the nationwide holidays in it", () => {
+      const regional = itHolidays.getRegionalHolidays();
+      expect(Object.keys(regional)).toEqual(["BZ"]);
+      expect(regional.BZ).toEqual(
+        expect.arrayContaining(itHolidays.getHolidays())
+      );
+      expect(itHolidays.getHolidays()).not.toContain(itHolidays.isWhitMonday);
     });
   });
 });

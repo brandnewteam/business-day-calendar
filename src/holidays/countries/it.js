@@ -146,6 +146,24 @@ export const isStStephensDay = defineHoliday(
 );
 
 /**
+ * Checks if the date is Whit Monday (50 days after Easter Sunday). Public holiday
+ * in the Autonomous Province of Bolzano / South Tyrol only, where it replaces the
+ * local patron saint's day.
+ * @param {DateTime} date
+ * @returns {boolean}
+ */
+export const isWhitMonday = defineHoliday("Lunedì di Pentecoste", (date) => {
+  const easterSunday = calculateEaster(date.year);
+  const whitMonday = DateTime.fromObject({
+    year: easterSunday.year,
+    month: easterSunday.month,
+    day: easterSunday.day,
+  }).plus({ days: 50 });
+
+  return date.month === whitMonday.month && date.day === whitMonday.day;
+});
+
+/**
  * Returns all common Italian Holiday matchers
  * @returns {HolidayMatcher[]}
  */
@@ -164,3 +182,14 @@ export const getHolidays = () => [
   isChristmasDay,
   isStStephensDay,
 ];
+
+/**
+ * Returns the public holiday matchers of the territories that have holidays in
+ * addition to the nationwide ones, keyed by ISO 3166-2 code without the "IT-"
+ * prefix: "BZ" (Autonomous Province of Bolzano / South Tyrol), which observes
+ * Whit Monday.
+ * @returns {Record<string, HolidayMatcher[]>}
+ */
+export const getRegionalHolidays = () => ({
+  BZ: [...getHolidays(), isWhitMonday],
+});
