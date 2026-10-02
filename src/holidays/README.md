@@ -30,6 +30,7 @@ Pre-defined groups of holidays:
 
 - `combineHolidays(...matcherSets)`: Combines multiple sets of holiday matchers into a single array
 - `defineHoliday(name, matcher)`: Attaches a human-readable name to a holiday matcher
+- `listHolidays(holidayMatchers, year)`: Lists the holidays of a year as `{ name, month, day }` objects, sorted by date
 - `adjustWeekendHolidayMatchers(holidayMatcher)`: Creates a matcher that handles weekend-adjusted holidays (i.e. if a holiday falls on a weekend, it moves to Friday or Monday)
 - `getWeekendAdjustedHolidays(holidayMatchers)`: Applies weekend adjustment to an array of holiday matchers
 

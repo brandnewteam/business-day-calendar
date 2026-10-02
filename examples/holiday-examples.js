@@ -6,6 +6,7 @@ import {
   getWeekendAdjustedHolidays,
   calculateEaster,
   calculateEasterMonday,
+  listHolidays,
 } from "../src/index.js";
 
 // Example: Create a calendar for 2025 with US holidays
@@ -137,3 +138,11 @@ for (const dateStr of sanMarinoHolidaysToCheck) {
 console.log(
   `\nCorpus Domini 2025: ${corpusDomini.toLocaleString(DateTime.DATE_FULL)}`
 );
+
+// Example: List the holidays of a year by country
+console.log("\nItalian holidays in 2026:");
+for (const { name, month, day } of listHolidays(holidays.IT.all, 2026)) {
+  console.log(
+    `${String(day).padStart(2)}/${String(month).padStart(2)}  ${name}`
+  );
+}

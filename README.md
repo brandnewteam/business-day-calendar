@@ -144,6 +144,37 @@ const combinedCalendar = createBusinessCalendar({
 });
 ```
 
+### Listing Holidays
+
+`listHolidays(holidayMatchers, year)` returns the holidays of a given year as `{ name, month, day }` objects, sorted by date. It works with any set of matchers: a predefined group, a combination of groups, or your own.
+
+```javascript
+import { holidays, listHolidays } from "business-day-calendar";
+
+listHolidays(holidays.IT.all, 2026);
+// [
+//   { name: "Capodanno", month: 1, day: 1 },
+//   { name: "Epifania", month: 1, day: 6 },
+//   { name: "Pasqua", month: 4, day: 5 },
+//   ...
+//   { name: "Santo Stefano", month: 12, day: 26 },
+// ]
+```
+
+Predefined matchers are named in the official language of their country (Italian for IT and SM, English for US). To name your own matchers, wrap them with `defineHoliday(name, matcher)`; unnamed matchers fall back to the function's name.
+
+```javascript
+import { defineHoliday, listHolidays } from "business-day-calendar";
+
+const isFoundersDay = defineHoliday(
+  "Founders' Day",
+  (date) => date.month === 9 && date.day === 15
+);
+
+listHolidays([isFoundersDay], 2026);
+// [{ name: "Founders' Day", month: 9, day: 15 }]
+```
+
 ## Contributing
 
 Contributions are welcome! Please open an [issue](https://github.com/brandnewteam/business-day-calendar/issues) or submit a [pull request](https://github.com/brandnewteam/business-day-calendar/pulls).
