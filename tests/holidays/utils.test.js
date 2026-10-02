@@ -3,6 +3,12 @@ import { DateTime } from "luxon";
 import {
   calculateEaster,
   calculateEasterMonday,
+  calculateOrthodoxEaster,
+  isFixedDate,
+  isEasterOffset,
+  isOrthodoxEasterOffset,
+  isNthWeekdayOfMonth,
+  isLastWeekdayOfMonth,
 } from "../../src/holidays/utils.js";
 import {
   holidays,
@@ -182,5 +188,80 @@ describe("defineHoliday", () => {
       expect(matcher.holidayName).toEqual(expect.any(String));
       expect(matcher.holidayName).not.toBe("");
     }
+  });
+});
+
+describe("Matcher helpers", () => {
+  it("calculateOrthodoxEaster should return known Gregorian dates", () => {
+    expect(calculateOrthodoxEaster(2024)).toEqual({
+      year: 2024,
+      month: 5,
+      day: 5,
+    });
+    expect(calculateOrthodoxEaster(2025)).toEqual({
+      year: 2025,
+      month: 4,
+      day: 20,
+    });
+    expect(calculateOrthodoxEaster(2026)).toEqual({
+      year: 2026,
+      month: 4,
+      day: 12,
+    });
+    expect(calculateOrthodoxEaster(2027)).toEqual({
+      year: 2027,
+      month: 5,
+      day: 2,
+    });
+    expect(calculateOrthodoxEaster(2030)).toEqual({
+      year: 2030,
+      month: 4,
+      day: 28,
+    });
+  });
+
+  it("isFixedDate should match the given month and day only", () => {
+    const m = isFixedDate(7, 14);
+    expect(m(DateTime.fromISO("2025-07-14"))).toBe(true);
+    expect(m(DateTime.fromISO("2025-07-15"))).toBe(false);
+    expect(m(DateTime.fromISO("2025-06-14"))).toBe(false);
+  });
+
+  it("isEasterOffset should match days relative to Easter Sunday", () => {
+    // Easter 2026 is April 5
+    expect(isEasterOffset(-2)(DateTime.fromISO("2026-04-03"))).toBe(true); // Good Friday
+    expect(isEasterOffset(1)(DateTime.fromISO("2026-04-06"))).toBe(true); // Easter Monday
+    expect(isEasterOffset(39)(DateTime.fromISO("2026-05-14"))).toBe(true); // Ascension
+    expect(isEasterOffset(50)(DateTime.fromISO("2026-05-25"))).toBe(true); // Whit Monday
+    expect(isEasterOffset(50)(DateTime.fromISO("2026-05-24"))).toBe(false);
+  });
+
+  it("isOrthodoxEasterOffset should match days relative to Orthodox Easter", () => {
+    // Orthodox Easter 2026 is April 12
+    expect(isOrthodoxEasterOffset(-2)(DateTime.fromISO("2026-04-10"))).toBe(
+      true
+    );
+    expect(isOrthodoxEasterOffset(1)(DateTime.fromISO("2026-04-13"))).toBe(
+      true
+    );
+    expect(isOrthodoxEasterOffset(1)(DateTime.fromISO("2026-04-06"))).toBe(
+      false
+    );
+  });
+
+  it("isNthWeekdayOfMonth and isLastWeekdayOfMonth should match floating holidays", () => {
+    // 3rd Monday of January 2025 is January 20; last Monday of May 2025 is May 26
+    expect(isNthWeekdayOfMonth(1, 1, 3)(DateTime.fromISO("2025-01-20"))).toBe(
+      true
+    );
+    expect(isNthWeekdayOfMonth(1, 1, 3)(DateTime.fromISO("2025-01-13"))).toBe(
+      false
+    );
+    expect(isLastWeekdayOfMonth(5, 1)(DateTime.fromISO("2025-05-26"))).toBe(
+      true
+    );
+    expect(isLastWeekdayOfMonth(5, 1)(DateTime.fromISO("2025-05-19"))).toBe(
+      false
+    );
   });
 });

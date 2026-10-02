@@ -1,4 +1,4 @@
-/** @typedef {import("luxon").DateTime} DateTime */
+import { DateTime } from "luxon";
 
 /**
  * A predicate that returns true when the given date is a holiday.
@@ -73,3 +73,93 @@ export function calculateEasterMonday(year) {
 
   return { year, month, day };
 }
+
+/**
+ * Calculates Orthodox Easter Sunday for a given year (Julian computus, Meeus algorithm),
+ * expressed as a date in the Gregorian calendar.
+ *
+ * @param {number} year - The year for which to calculate Orthodox Easter Sunday
+ * @returns {{ year: number, month: number, day: number }} - Object with year, month (1-12), and day
+ */
+export function calculateOrthodoxEaster(year) {
+  const a = year % 4;
+  const b = year % 7;
+  const c = year % 19;
+  const d = (19 * c + 15) % 30;
+  const e = (2 * a + 4 * b - d + 34) % 7;
+  // Easter in the Julian calendar
+  const julianMonth = Math.floor((d + e + 114) / 31);
+  const julianDay = ((d + e + 114) % 31) + 1;
+
+  // Julian-to-Gregorian offset (13 days for 1900-2099)
+  const offset = Math.floor(year / 100) - Math.floor(year / 400) - 2;
+  const easter = DateTime.utc(year, julianMonth, julianDay).plus({
+    days: offset,
+  });
+
+  return { year, month: easter.month, day: easter.day };
+}
+
+/**
+ * Creates a matcher for a holiday that falls on the same calendar date every year.
+ *
+ * @param {number} month - Month (1-12)
+ * @param {number} day - Day of the month
+ * @returns {HolidayMatcher}
+ */
+export const isFixedDate = (month, day) => (date) =>
+  date.month === month && date.day === day;
+
+/**
+ * Creates a matcher for a holiday defined as a number of days before or after Easter Sunday
+ * (e.g. -2 for Good Friday, 1 for Easter Monday, 39 for Ascension Day, 50 for Whit Monday).
+ *
+ * @param {number} offset - Days relative to Easter Sunday (negative for days before)
+ * @returns {HolidayMatcher}
+ */
+export const isEasterOffset = (offset) => (date) => {
+  const easter = calculateEaster(date.year);
+  const target = DateTime.utc(easter.year, easter.month, easter.day).plus({
+    days: offset,
+  });
+  return date.month === target.month && date.day === target.day;
+};
+
+/**
+ * Creates a matcher for a holiday defined as a number of days before or after Orthodox Easter Sunday.
+ *
+ * @param {number} offset - Days relative to Orthodox Easter Sunday (negative for days before)
+ * @returns {HolidayMatcher}
+ */
+export const isOrthodoxEasterOffset = (offset) => (date) => {
+  const easter = calculateOrthodoxEaster(date.year);
+  const target = DateTime.utc(easter.year, easter.month, easter.day).plus({
+    days: offset,
+  });
+  return date.month === target.month && date.day === target.day;
+};
+
+/**
+ * Creates a matcher for the n-th given weekday of a month (e.g. the 3rd Monday of January).
+ *
+ * @param {number} month - Month (1-12)
+ * @param {number} weekday - ISO weekday (1=Monday ... 7=Sunday)
+ * @param {number} n - Occurrence within the month, starting from 1
+ * @returns {HolidayMatcher}
+ */
+export const isNthWeekdayOfMonth = (month, weekday, n) => (date) =>
+  date.month === month &&
+  date.weekday === weekday &&
+  Math.floor((date.day - 1) / 7) === n - 1;
+
+/**
+ * Creates a matcher for the last given weekday of a month (e.g. the last Monday of May).
+ *
+ * @param {number} month - Month (1-12)
+ * @param {number} weekday - ISO weekday (1=Monday ... 7=Sunday)
+ * @returns {HolidayMatcher}
+ */
+export const isLastWeekdayOfMonth = (month, weekday) => (date) =>
+  date.month === month &&
+  date.weekday === weekday &&
+  date.plus({ days: 7 }).month !== month;
