@@ -4,9 +4,11 @@ This directory contains predefined holiday matchers for various countries and re
 
 ## Available Holiday Matchers
 
-- Italy
+- Italy (includes the Feast of Saint Francis of Assisi on October 4, a national holiday from 2026 — Law no. 151 of October 8, 2025)
 - San Marino
 - United States
+
+Every predefined matcher carries a `holidayName` in the official language of its country (set via `defineHoliday`; Italian for IT and SM, English for US), so it can be reported by `listHolidays`.
 
 ## Utility Functions
 
@@ -27,6 +29,7 @@ Pre-defined groups of holidays:
 ### Utility Functions
 
 - `combineHolidays(...matcherSets)`: Combines multiple sets of holiday matchers into a single array
+- `defineHoliday(name, matcher)`: Attaches a human-readable name to a holiday matcher
 - `adjustWeekendHolidayMatchers(holidayMatcher)`: Creates a matcher that handles weekend-adjusted holidays (i.e. if a holiday falls on a weekend, it moves to Friday or Monday)
 - `getWeekendAdjustedHolidays(holidayMatchers)`: Applies weekend adjustment to an array of holiday matchers
 

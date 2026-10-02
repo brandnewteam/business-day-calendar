@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { calculateEaster } from "../utils.js";
+import { calculateEaster, defineHoliday } from "../utils.js";
 
 /**
  * A predicate that returns true when the given date is a holiday.
@@ -13,31 +13,37 @@ import { calculateEaster } from "../utils.js";
  * @param {DateTime} date
  * @returns {boolean}
  */
-export const isNewYearsDay = (date) => date.month === 1 && date.day === 1;
+export const isNewYearsDay = defineHoliday(
+  "Capodanno",
+  (date) => date.month === 1 && date.day === 1
+);
 
 /**
  * Checks if the date is Epiphany (January 6)
  * @param {DateTime} date
  * @returns {boolean}
  */
-export const isEpiphany = (date) => date.month === 1 && date.day === 6;
+export const isEpiphany = defineHoliday(
+  "Epifania",
+  (date) => date.month === 1 && date.day === 6
+);
 
 /**
  * Checks if the date is Easter Sunday (calculated using the utility function)
  * @param {DateTime} date
  * @returns {boolean}
  */
-export const isEasterSunday = (date) => {
+export const isEasterSunday = defineHoliday("Pasqua", (date) => {
   const easter = calculateEaster(date.year);
   return date.month === easter.month && date.day === easter.day;
-};
+});
 
 /**
  * Checks if the date is Easter Monday (calculated using the utility function)
  * @param {DateTime} date
  * @returns {boolean}
  */
-export const isEasterMonday = (date) => {
+export const isEasterMonday = defineHoliday("Lunedì dell'Angelo", (date) => {
   const easterSunday = calculateEaster(date.year);
   const easterMonday = DateTime.fromObject({
     year: easterSunday.year,
@@ -46,66 +52,98 @@ export const isEasterMonday = (date) => {
   }).plus({ days: 1 });
 
   return date.month === easterMonday.month && date.day === easterMonday.day;
-};
+});
 
 /**
  * Checks if the date is Liberation Day (April 25)
  * @param {DateTime} date
  * @returns {boolean}
  */
-export const isItalianLiberationDay = (date) =>
-  date.month === 4 && date.day === 25;
+export const isItalianLiberationDay = defineHoliday(
+  "Festa della Liberazione",
+  (date) => date.month === 4 && date.day === 25
+);
 
 /**
  * Checks if the date is Labor Day / May Day (May 1)
  * @param {DateTime} date
  * @returns {boolean}
  */
-export const isWorkersDay = (date) => date.month === 5 && date.day === 1;
+export const isWorkersDay = defineHoliday(
+  "Festa dei Lavoratori",
+  (date) => date.month === 5 && date.day === 1
+);
 
 /**
  * Checks if the date is Republic Day (June 2)
  * @param {DateTime} date
  * @returns {boolean}
  */
-export const isItalianRepublicDay = (date) =>
-  date.month === 6 && date.day === 2;
+export const isItalianRepublicDay = defineHoliday(
+  "Festa della Repubblica",
+  (date) => date.month === 6 && date.day === 2
+);
 
 /**
  * Checks if the date is Ferragosto / Assumption Day (August 15)
  * @param {DateTime} date
  * @returns {boolean}
  */
-export const isAssumptionDay = (date) => date.month === 8 && date.day === 15;
+export const isAssumptionDay = defineHoliday(
+  "Assunzione di Maria",
+  (date) => date.month === 8 && date.day === 15
+);
+
+/**
+ * Checks if the date is the Feast of Saint Francis of Assisi, patron saint of Italy (October 4).
+ * Reinstated as a national holiday by Law no. 151 of October 8, 2025, in force from 2026.
+ * @param {DateTime} date
+ * @returns {boolean}
+ */
+export const isSaintFrancisDay = defineHoliday(
+  "San Francesco d'Assisi",
+  (date) => date.year >= 2026 && date.month === 10 && date.day === 4
+);
 
 /**
  * Checks if the date is All Saints' Day (November 1)
  * @param {DateTime} date
  * @returns {boolean}
  */
-export const isAllSaintsDay = (date) => date.month === 11 && date.day === 1;
+export const isAllSaintsDay = defineHoliday(
+  "Ognissanti",
+  (date) => date.month === 11 && date.day === 1
+);
 
 /**
  * Checks if the date is Immaculate Conception (December 8)
  * @param {DateTime} date
  * @returns {boolean}
  */
-export const isImmaculateConception = (date) =>
-  date.month === 12 && date.day === 8;
+export const isImmaculateConception = defineHoliday(
+  "Immacolata Concezione",
+  (date) => date.month === 12 && date.day === 8
+);
 
 /**
  * Checks if the date is Christmas Day (December 25)
  * @param {DateTime} date
  * @returns {boolean}
  */
-export const isChristmasDay = (date) => date.month === 12 && date.day === 25;
+export const isChristmasDay = defineHoliday(
+  "Natale",
+  (date) => date.month === 12 && date.day === 25
+);
 
 /**
  * Checks if the date is St. Stephen's Day (December 26)
  * @param {DateTime} date
  * @returns {boolean}
  */
-export const isStStephensDay = (date) => date.month === 12 && date.day === 26;
+export const isStStephensDay = defineHoliday(
+  "Santo Stefano",
+  (date) => date.month === 12 && date.day === 26
+);
 
 /**
  * Returns all common Italian Holiday matchers
@@ -120,6 +158,7 @@ export const getHolidays = () => [
   isWorkersDay,
   isItalianRepublicDay,
   isAssumptionDay,
+  isSaintFrancisDay,
   isAllSaintsDay,
   isImmaculateConception,
   isChristmasDay,

@@ -196,14 +196,38 @@ describe("Italian Holidays", () => {
     });
   });
 
+  describe("isSaintFrancisDay", () => {
+    it("should recognize October 4th as Saint Francis' Day from 2026 onwards", () => {
+      expect(itHolidays.isSaintFrancisDay(DateTime.fromISO("2026-10-04"))).toBe(
+        true
+      );
+      expect(itHolidays.isSaintFrancisDay(DateTime.fromISO("2027-10-04"))).toBe(
+        true
+      );
+    });
+
+    it("should not recognize October 4th before 2026 (Law 151/2025 in force from 2026)", () => {
+      expect(itHolidays.isSaintFrancisDay(DateTime.fromISO("2025-10-04"))).toBe(
+        false
+      );
+    });
+
+    it("should not recognize other days as Saint Francis' Day", () => {
+      expect(itHolidays.isSaintFrancisDay(DateTime.fromISO("2026-10-05"))).toBe(
+        false
+      );
+    });
+  });
+
   describe("getHolidays", () => {
     it("should return all Italian holidays", () => {
       const holidays = itHolidays.getHolidays();
-      expect(holidays.length).toBe(12); // There are 12 Italian holidays
+      expect(holidays.length).toBe(13); // There are 13 Italian holidays
 
       // Verify a few specific holidays are included
       expect(holidays).toContain(itHolidays.isNewYearsDay);
       expect(holidays).toContain(itHolidays.isEasterSunday);
+      expect(holidays).toContain(itHolidays.isSaintFrancisDay);
       expect(holidays).toContain(itHolidays.isChristmasDay);
       expect(holidays).toContain(itHolidays.isStStephensDay);
     });

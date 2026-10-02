@@ -1,3 +1,32 @@
+/** @typedef {import("luxon").DateTime} DateTime */
+
+/**
+ * A predicate that returns true when the given date is a holiday.
+ * @callback HolidayMatcher
+ * @param {DateTime} date
+ * @returns {boolean}
+ */
+
+/**
+ * A holiday matcher carrying a human-readable name, as produced by `defineHoliday`.
+ * @typedef {HolidayMatcher & { holidayName?: string }} NamedHolidayMatcher
+ */
+
+/**
+ * Attaches a human-readable name to a holiday matcher, so that it can be reported
+ * by `listHolidays`. The original matcher is not mutated.
+ *
+ * @param {string} name - The holiday name, e.g. "Christmas Day"
+ * @param {HolidayMatcher} matcher - The predicate that recognizes the holiday
+ * @returns {NamedHolidayMatcher}
+ */
+export function defineHoliday(name, matcher) {
+  /** @type {NamedHolidayMatcher} */
+  const named = (date) => matcher(date);
+  named.holidayName = name;
+  return named;
+}
+
 /**
  * Calculates Easter Sunday for a given year using the Meeus/Jones/Butcher algorithm.
  * Returns an object with the month and day of Easter Sunday.

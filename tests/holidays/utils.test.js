@@ -5,8 +5,10 @@ import {
   calculateEasterMonday,
 } from "../../src/holidays/utils.js";
 import {
+  holidays,
   combineHolidays,
   getWeekendAdjustedHolidays,
+  defineHoliday,
 } from "../../src/holidays/index.js";
 
 describe("Holiday Utilities", () => {
@@ -150,5 +152,35 @@ describe("Holiday Utilities", () => {
       expect(adjustedNewYears(randomDate)).toBe(false);
       expect(adjustedIndependence(randomDate)).toBe(false);
     });
+  });
+});
+
+describe("defineHoliday", () => {
+  it("should attach a name to the matcher without changing its behavior", () => {
+    const matcher = (date) => date.month === 3 && date.day === 8;
+    const named = defineHoliday("Women's Day", matcher);
+
+    expect(named.holidayName).toBe("Women's Day");
+    expect(named(DateTime.fromISO("2025-03-08"))).toBe(true);
+    expect(named(DateTime.fromISO("2025-03-09"))).toBe(false);
+  });
+
+  it("should not mutate the original matcher", () => {
+    const matcher = (date) => date.month === 3 && date.day === 8;
+    defineHoliday("Women's Day", matcher);
+
+    expect(matcher).not.toHaveProperty("holidayName");
+  });
+
+  it("should name every predefined holiday matcher", () => {
+    const all = combineHolidays(
+      holidays.IT.all,
+      holidays.SM.all,
+      holidays.US.all
+    );
+    for (const matcher of all) {
+      expect(matcher.holidayName).toEqual(expect.any(String));
+      expect(matcher.holidayName).not.toBe("");
+    }
   });
 });
